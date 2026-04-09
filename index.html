@@ -211,7 +211,7 @@ function connect(){
 // ===== Map =====
 function initMap(){
   leafletMap=L.map("map",{zoomControl:false}).setView([37.15,127.08],16);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OSM"}).addTo(leafletMap);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{attribution:"© OpenStreetMap, © CARTO"}).addTo(leafletMap);
   L.control.zoom({position:"bottomright"}).addTo(leafletMap);
 }
 
