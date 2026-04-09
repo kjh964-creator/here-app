@@ -18,130 +18,154 @@
   *{margin:0;padding:0;box-sizing:border-box;}
   body{font-family:'Noto Sans KR',-apple-system,sans-serif;overflow:hidden;height:100vh;height:100dvh;background:#0a1628;}
 
-  /* ===== SPLASH ===== */
-  #splash{
-    height:100vh;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    background:linear-gradient(145deg,#0a1628,#132744 50%,#1a3a5c);color:#fff;padding:20px;text-align:center;
-    overflow-y:auto;
-  }
-  .globe{font-size:64px;margin-bottom:8px;animation:float 3s ease-in-out infinite;}
-  #splash h1{
-    font-size:28px;font-weight:800;margin:0 0 4px;
+  .page{height:100vh;height:100dvh;display:none;flex-direction:column;
+    background:linear-gradient(145deg,#0a1628,#132744 50%,#1a3a5c);color:#fff;}
+  .page.active{display:flex;}
+
+  /* ===== 닉네임 페이지 ===== */
+  #nickPage{align-items:center;justify-content:center;padding:24px;text-align:center;}
+  .globe{font-size:60px;margin-bottom:8px;animation:float 3s ease-in-out infinite;}
+  #nickPage h1{
+    font-size:30px;font-weight:800;margin:0 0 4px;
     background:linear-gradient(135deg,#4FC3F7,#81D4FA,#B3E5FC);
     -webkit-background-clip:text;-webkit-text-fill-color:transparent;
   }
-  .sub{font-size:13px;color:#8EACC1;margin-bottom:24px;letter-spacing:2px;}
-
-  .card{
-    background:rgba(255,255,255,0.06);border-radius:16px;padding:20px 24px;
-    margin-bottom:16px;border:1px solid rgba(255,255,255,0.08);width:100%;max-width:320px;
+  .sub{font-size:13px;color:#8EACC1;margin-bottom:28px;letter-spacing:2px;}
+  .nick-card{
+    background:rgba(255,255,255,0.06);border-radius:18px;padding:24px;
+    margin-bottom:20px;border:1px solid rgba(255,255,255,0.08);width:100%;max-width:320px;
   }
-  .card-title{color:#8EACC1;font-size:12px;font-weight:600;margin-bottom:10px;letter-spacing:1px;}
-  .avatar-big{font-size:40px;margin-bottom:10px;}
-  .input-row{margin-bottom:10px;}
-  .input-row label{display:block;color:#5a7a94;font-size:11px;margin-bottom:4px;text-align:left;padding-left:4px;}
-  .text-input{
+  .avatar-display{font-size:44px;margin-bottom:14px;}
+  .input-field{
     background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
-    border-radius:10px;padding:12px 14px;color:#fff;font-size:16px;text-align:center;
-    outline:none;width:100%;font-family:inherit;
+    border-radius:12px;padding:14px 16px;color:#fff;font-size:18px;text-align:center;
+    outline:none;width:100%;font-family:inherit;transition:border 0.2s;
   }
-  .text-input::placeholder{color:#5a7a94;}
-  .text-input:focus{border-color:rgba(79,195,247,0.5);}
+  .input-field::placeholder{color:#5a7a94;}
+  .input-field:focus{border-color:rgba(79,195,247,0.5);}
+  .big-btn{
+    border:none;border-radius:14px;padding:16px;font-size:17px;font-weight:700;
+    cursor:pointer;transition:all 0.3s;font-family:inherit;width:100%;max-width:320px;
+  }
+  .big-btn.off{background:rgba(255,255,255,0.1);color:#5a7a94;cursor:not-allowed;}
+  .big-btn.on{background:linear-gradient(135deg,#4FC3F7,#0288D1);color:#fff;box-shadow:0 4px 20px rgba(79,195,247,0.35);}
+  .big-btn.on:active{transform:scale(0.96);}
 
-  .room-info{
-    background:rgba(79,195,247,0.08);border:1px solid rgba(79,195,247,0.15);
-    border-radius:10px;padding:10px 14px;margin-top:8px;
+  /* ===== 로비 페이지 ===== */
+  #lobbyPage{padding:0;overflow-y:auto;}
+  .lobby-top{
+    padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between;
+    position:sticky;top:0;background:linear-gradient(180deg,#0e1e30 80%,transparent);z-index:10;padding-top:24px;padding-bottom:12px;
   }
-  .room-info p{color:#8EACC1;font-size:11px;line-height:1.5;}
-  .room-info p b{color:#4FC3F7;}
+  .lobby-top h2{font-size:20px;font-weight:800;color:#fff;}
+  .my-tag{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,0.06);border-radius:30px;padding:5px 12px 5px 7px;}
+  .my-tag .tav{font-size:18px;}
+  .my-tag .tnm{color:#B3E5FC;font-size:12px;font-weight:600;}
 
-  .connect-btn{
-    background:rgba(255,255,255,0.1);border:none;border-radius:14px;
-    padding:14px 48px;color:#5a7a94;font-size:17px;font-weight:700;
-    cursor:not-allowed;transition:all 0.3s;font-family:inherit;width:100%;max-width:320px;
+  .lobby-body{padding:0 20px 100px;}
+  .create-room-btn{
+    width:100%;padding:18px;border:2px dashed rgba(79,195,247,0.3);border-radius:16px;
+    background:rgba(79,195,247,0.05);color:#4FC3F7;font-size:16px;font-weight:700;
+    cursor:pointer;font-family:inherit;margin-bottom:20px;transition:all 0.2s;
   }
-  .connect-btn.active{
-    background:linear-gradient(135deg,#4FC3F7,#0288D1);color:#fff;cursor:pointer;
-    box-shadow:0 4px 20px rgba(79,195,247,0.35);
-  }
-  .connect-btn.active:active{transform:scale(0.96);}
-  .hint{font-size:11px;color:#5a7a94;margin-top:14px;max-width:280px;line-height:1.6;}
+  .create-room-btn:active{background:rgba(79,195,247,0.15);transform:scale(0.98);}
 
-  /* ===== MAP PAGE ===== */
-  #mapPage{display:none;height:100vh;height:100dvh;position:relative;}
+  .section-label{color:#5a7a94;font-size:12px;font-weight:600;margin-bottom:10px;letter-spacing:1px;}
+  .room-list{display:flex;flex-direction:column;gap:10px;}
+  .room-item{
+    background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+    border-radius:14px;padding:16px 18px;display:flex;align-items:center;justify-content:space-between;
+    cursor:pointer;transition:all 0.2s;
+  }
+  .room-item:active{transform:scale(0.98);background:rgba(79,195,247,0.08);}
+  .room-left{display:flex;align-items:center;gap:12px;}
+  .room-icon{font-size:28px;}
+  .room-name{color:#fff;font-size:15px;font-weight:700;}
+  .room-count{color:#8EACC1;font-size:12px;margin-top:2px;}
+  .room-join{
+    background:linear-gradient(135deg,#4FC3F7,#0288D1);border:none;border-radius:10px;
+    padding:8px 18px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+  }
+  .no-rooms{text-align:center;padding:40px 20px;color:#5a7a94;font-size:14px;line-height:1.6;}
+
+  /* 방 만들기 모달 */
+  .modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;z-index:3000;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;}
+  .modal-bg.show{display:flex;}
+  .modal{background:#1a2a3a;border-radius:20px;padding:28px;border:1px solid rgba(255,255,255,0.1);max-width:300px;width:90%;text-align:center;}
+  .modal h3{color:#fff;font-size:18px;font-weight:700;margin-bottom:16px;}
+  .modal .input-field{margin-bottom:16px;font-size:16px;}
+  .modal-btns{display:flex;gap:10px;}
+  .modal-btns button{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;border:none;}
+  .mbtn-cancel{background:rgba(255,255,255,0.1);color:#8EACC1;}
+  .mbtn-ok{background:linear-gradient(135deg,#4FC3F7,#0288D1);color:#fff;}
+
+  /* ===== 지도 페이지 ===== */
+  #mapPage{position:relative;}
   #map{width:100%;height:100%;}
 
-  .top-bar{
+  /* 상단바 */
+  .map-top{
     position:absolute;top:0;left:0;right:0;z-index:1000;
-    background:linear-gradient(180deg,rgba(10,22,40,0.95),rgba(10,22,40,0));
-    padding:10px 12px 28px;
+    background:linear-gradient(180deg,rgba(10,22,40,0.95) 60%,rgba(10,22,40,0));
+    padding:12px 14px 24px;display:flex;align-items:center;justify-content:space-between;
   }
-  .top-row{display:flex;align-items:center;justify-content:space-between;}
-  .top-left{display:flex;align-items:center;gap:8px;}
-  .top-left .av{font-size:22px;}
-  .top-left .name{color:#fff;font-size:13px;font-weight:700;}
-  .top-left .status{font-size:10px;}
-  .top-right{display:flex;gap:6px;align-items:center;}
-  .badge{background:rgba(255,255,255,0.1);border-radius:20px;padding:5px 10px;color:#B3E5FC;font-size:11px;font-weight:600;}
-  .room-badge{background:rgba(79,195,247,0.15);border:1px solid rgba(79,195,247,0.3);border-radius:20px;padding:5px 10px;color:#4FC3F7;font-size:11px;font-weight:600;}
-  .small-btn{border-radius:20px;padding:5px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;border:none;}
+  .map-room-name{
+    background:rgba(79,195,247,0.12);border:1px solid rgba(79,195,247,0.25);
+    border-radius:12px;padding:8px 14px;color:#4FC3F7;font-size:14px;font-weight:700;
+    display:flex;align-items:center;gap:6px;
+  }
+  .map-btns{display:flex;gap:8px;}
+  .map-btn{
+    border-radius:12px;padding:8px 14px;font-size:13px;font-weight:600;
+    cursor:pointer;font-family:inherit;border:none;display:flex;align-items:center;gap:4px;
+  }
+  .btn-hide{background:rgba(255,165,0,0.15);color:#FFA726;}
+  .btn-hide.hidden{background:rgba(79,195,247,0.15);color:#4FC3F7;}
+  .btn-exit{background:rgba(255,107,107,0.15);color:#ff6b6b;}
 
-  .user-list{
+  /* 하단 유저 카드 */
+  .bottom-panel{
     position:absolute;bottom:0;left:0;right:0;z-index:1000;
-    background:linear-gradient(0deg,rgba(10,22,40,0.95) 0%,rgba(10,22,40,0.85) 80%,transparent);
-    padding:32px 12px 16px;display:none;
+    background:linear-gradient(0deg,rgba(10,22,40,0.95) 60%,rgba(10,22,40,0.8) 85%,transparent);
+    padding:24px 12px 14px;
   }
-  .user-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
-  .user-card{
-    background:rgba(255,255,255,0.07);border-radius:14px;padding:12px 16px;
-    min-width:110px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);
-    transition:transform 0.15s;flex-shrink:0;
+  .user-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;}
+  /* 큰 카드 (1~4명) */
+  .ucard{
+    background:rgba(255,255,255,0.07);border-radius:14px;padding:10px 14px;
+    border:1px solid rgba(255,255,255,0.08);text-align:center;cursor:pointer;
+    transition:transform 0.15s;flex:1;min-width:70px;max-width:120px;
   }
-  .user-card:active{transform:scale(0.95);}
-  .uav{font-size:28px;text-align:center;margin-bottom:4px;}
-  .uname{color:#fff;font-size:12px;font-weight:600;text-align:center;white-space:nowrap;}
-  .udist{color:#4FC3F7;font-size:11px;text-align:center;margin-top:2px;}
-  .utime{color:#5a7a94;font-size:10px;text-align:center;margin-top:2px;}
+  .ucard:active{transform:scale(0.95);}
+  .ucard.me{border-color:rgba(79,195,247,0.3);background:rgba(79,195,247,0.08);}
+  .ucard.hiding{opacity:0.5;}
+  .ucard .ua{font-size:28px;margin-bottom:2px;}
+  .ucard .un{color:#fff;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ucard .ud{color:#4FC3F7;font-size:10px;margin-top:2px;}
+  .ucard .uh{color:#FFA726;font-size:9px;margin-top:2px;}
+  /* 작은 카드 (5~8명) */
+  .ucard.sm .ua{font-size:22px;}
+  .ucard.sm{padding:8px 10px;min-width:60px;}
+  .ucard.sm .un{font-size:10px;}
+  .ucard.sm .ud{font-size:9px;}
 
-  .overlay{
+  /* GPS 오버레이 */
+  .gps-overlay{
     position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;
     background:rgba(10,22,40,0.95);border-radius:18px;padding:28px 36px;
     color:#fff;text-align:center;border:1px solid rgba(79,195,247,0.2);max-width:300px;
-  }
-  .empty-msg{
-    position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:1000;
-    background:rgba(10,22,40,0.9);border-radius:14px;padding:14px 24px;
-    border:1px solid rgba(79,195,247,0.2);text-align:center;display:none;max-width:280px;
-  }
-  .recenter-btn{
-    position:absolute;right:12px;bottom:80px;z-index:1000;
-    background:rgba(10,22,40,0.9);border:1px solid rgba(79,195,247,0.3);
-    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;
-    display:none;align-items:center;justify-content:center;color:#fff;
   }
   .retry-btn{
     margin-top:16px;background:linear-gradient(135deg,#4FC3F7,#0288D1);
     border:none;border-radius:10px;padding:10px 28px;color:#fff;
     font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;
   }
-
-  /* 모달 */
-  .modal-overlay{
-    position:fixed;top:0;left:0;right:0;bottom:0;z-index:3000;
-    background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;
+  .recenter{
+    position:absolute;right:12px;z-index:1000;
+    background:rgba(10,22,40,0.9);border:1px solid rgba(79,195,247,0.3);
+    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;
+    display:none;align-items:center;justify-content:center;color:#fff;
   }
-  .modal-overlay.show{display:flex;}
-  .modal-box{
-    background:#1a2a3a;border-radius:18px;padding:28px 32px;text-align:center;
-    border:1px solid rgba(255,255,255,0.1);max-width:280px;width:90%;
-  }
-  .modal-box .icon{font-size:40px;margin-bottom:12px;}
-  .modal-box .title{color:#fff;font-size:16px;font-weight:700;margin-bottom:6px;}
-  .modal-box .desc{color:#8EACC1;font-size:13px;margin-bottom:20px;line-height:1.5;}
-  .modal-btns{display:flex;gap:10px;}
-  .modal-btns button{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;}
-  .btn-cancel{background:rgba(255,255,255,0.1);color:#8EACC1;}
-  .btn-disconnect{background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:#fff;}
 
   @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
   @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
@@ -149,238 +173,259 @@
 </head>
 <body>
 
-<!-- ===== SPLASH ===== -->
-<div id="splash">
+<!-- ===== 1. 닉네임 ===== -->
+<div class="page active" id="nickPage">
   <div class="globe">🌍</div>
   <h1>HERE</h1>
   <p class="sub">실시간 위치 공유</p>
-
-  <div class="card">
-    <div class="avatar-big" id="splashAvatar"></div>
-    <div class="input-row">
-      <label>👤 이름</label>
-      <input class="text-input" id="nicknameInput" maxlength="12" placeholder="이름을 입력하세요" oninput="checkReady()">
-    </div>
-    <div class="input-row">
-      <label>🔑 방 코드</label>
-      <input class="text-input" id="roomInput" maxlength="20" placeholder="예: 우리가족, 1234" oninput="checkReady()">
-    </div>
-    <div class="room-info">
-      <p>같은 <b>방 코드</b>를 입력한 사람끼리만<br>서로 위치가 보입니다</p>
-    </div>
+  <div class="nick-card">
+    <div class="avatar-display" id="myAvatarDisplay"></div>
+    <input class="input-field" id="nickInput" maxlength="12" placeholder="닉네임을 입력하세요"
+      oninput="checkNick()" onkeydown="if(event.key==='Enter')goLobby()">
   </div>
-
-  <button class="connect-btn" id="connectBtn" onclick="connect()">접속하기 📡</button>
-  <p class="hint">⚠️ 위치 권한 허용이 필요합니다<br>나가면 내 위치는 자동으로 삭제됩니다</p>
+  <button class="big-btn off" id="goLobbyBtn" onclick="goLobby()">시작하기 🚀</button>
 </div>
 
-<!-- ===== MAP PAGE ===== -->
-<div id="mapPage">
+<!-- ===== 2. 로비 ===== -->
+<div class="page" id="lobbyPage">
+  <div class="lobby-top">
+    <h2>🏠 로비</h2>
+    <div class="my-tag"><span class="tav" id="lobbyAvatar"></span><span class="tnm" id="lobbyNick"></span></div>
+  </div>
+  <div class="lobby-body">
+    <button class="create-room-btn" onclick="showCreateModal()">＋ 새 방 만들기</button>
+    <div class="section-label">현재 열린 방</div>
+    <div class="room-list" id="roomList">
+      <div class="no-rooms" id="noRooms">열린 방이 없습니다<br>새 방을 만들어보세요!</div>
+    </div>
+  </div>
+</div>
+
+<!-- 방 만들기 모달 -->
+<div class="modal-bg" id="createModal">
+  <div class="modal">
+    <h3>🏷️ 방 만들기</h3>
+    <input class="input-field" id="roomNameInput" maxlength="20" placeholder="방 이름 (예: 우리가족)"
+      onkeydown="if(event.key==='Enter')createRoom()">
+    <div class="modal-btns">
+      <button class="mbtn-cancel" onclick="hideCreateModal()">취소</button>
+      <button class="mbtn-ok" onclick="createRoom()">만들기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 3. 지도 ===== -->
+<div class="page" id="mapPage">
   <div id="map"></div>
 
-  <div class="top-bar">
-    <div class="top-row">
-      <div class="top-left">
-        <span class="av" id="topAvatar"></span>
-        <div>
-          <div class="name" id="topName"></div>
-          <div class="status" id="topStatus" style="color:#4FC3F7">📡 접속 중</div>
-        </div>
-      </div>
-      <div class="top-right">
-        <div class="room-badge" id="roomBadge">🔑 방</div>
-        <div class="badge" id="countBadge">👥 0명</div>
-        <button class="small-btn" id="toggleBtn" onclick="toggleOnline()"
-          style="background:rgba(255,107,107,0.15);color:#ff6b6b">숨기기</button>
-        <button class="small-btn" onclick="showDisconnectModal()"
-          style="background:rgba(255,255,255,0.08);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3)">나가기</button>
-      </div>
+  <div class="map-top">
+    <div class="map-room-name" id="mapRoomName">🔑 방</div>
+    <div class="map-btns">
+      <button class="map-btn btn-hide" id="hideBtn" onclick="toggleHide()">👁️ 숨기기</button>
+      <button class="map-btn btn-exit" onclick="showExitModal()">🚪 나가기</button>
     </div>
   </div>
 
-  <div id="gpsLoading" class="overlay">
+  <div class="gps-overlay" id="gpsOverlay">
     <div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div>
     <div style="font-size:15px;font-weight:600">GPS 연결 중...</div>
     <div style="font-size:12px;color:#5a7a94;margin-top:6px">잠시만 기다려주세요</div>
   </div>
 
-  <div class="user-list" id="userList">
-    <div class="user-scroll" id="userScroll"></div>
+  <div class="bottom-panel" id="bottomPanel" style="display:none">
+    <div class="user-grid" id="userGrid"></div>
   </div>
 
-  <div class="empty-msg" id="emptyMsg">
-    <div style="color:#8EACC1;font-size:13px">아직 이 방에 접속한 사람이 없어요 👀</div>
-    <div style="font-size:11px;color:#5a7a94;margin-top:4px">같은 방 코드를 알려주세요!</div>
-  </div>
-
-  <button class="recenter-btn" id="recenterBtn" onclick="recenter()">🎯</button>
+  <button class="recenter" id="recenterBtn" onclick="recenter()">🎯</button>
 </div>
 
-<!-- 접속 끊기 확인 모달 -->
-<div class="modal-overlay" id="disconnectModal">
-  <div class="modal-box">
-    <div class="icon">👋</div>
-    <div class="title">접속을 끊을까요?</div>
-    <div class="desc">내 위치가 지도에서 사라지고<br>시작 화면으로 돌아갑니다</div>
+<!-- 나가기 모달 -->
+<div class="modal-bg" id="exitModal">
+  <div class="modal">
+    <div style="font-size:40px;margin-bottom:12px">👋</div>
+    <h3>방을 나갈까요?</h3>
+    <p style="color:#8EACC1;font-size:13px;margin-bottom:20px;line-height:1.5">내 위치가 사라지고<br>로비로 돌아갑니다</p>
     <div class="modal-btns">
-      <button class="btn-cancel" onclick="hideDisconnectModal()">취소</button>
-      <button class="btn-disconnect" onclick="disconnect()">나가기</button>
+      <button class="mbtn-cancel" onclick="hideExitModal()">취소</button>
+      <button class="mbtn-ok" style="background:linear-gradient(135deg,#ff6b6b,#ee5a24)" onclick="leaveRoom()">나가기</button>
     </div>
   </div>
 </div>
 
 <script>
 // ===== Firebase =====
-const firebaseConfig = {
-  apiKey: "AIzaSyDigW9GGdbEU7M1-YHHpvpdsmdQ--ywhUU",
-  authDomain: "here-gps.firebaseapp.com",
-  databaseURL: "https://here-gps-default-rtdb.firebaseio.com",
-  projectId: "here-gps",
-  storageBucket: "here-gps.firebasestorage.app",
-  messagingSenderId: "375478624169",
-  appId: "1:375478624169:web:9b9575483ee97de050eeb8"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+firebase.initializeApp({
+  apiKey:"AIzaSyDigW9GGdbEU7M1-YHHpvpdsmdQ--ywhUU",
+  authDomain:"here-gps.firebaseapp.com",
+  databaseURL:"https://here-gps-default-rtdb.firebaseio.com",
+  projectId:"here-gps",
+  storageBucket:"here-gps.firebasestorage.app",
+  messagingSenderId:"375478624169",
+  appId:"1:375478624169:web:9b9575483ee97de050eeb8"
+});
+const db=firebase.database();
 
 // ===== State =====
 const AVATARS=["🐻","🦊","🐱","🐶","🐸","🦁","🐧","🐼","🦄","🐲","🦅","🐬","🐝","🦋","🐢","🐙"];
 const userId=Math.random().toString(36).slice(2,10);
 const avatar=AVATARS[Math.floor(Math.random()*AVATARS.length)];
 let nickname="";
-let roomCode="";
-let roomRef=null;
+let currentRoom="";
+let roomUsersRef=null;
+let roomUsersListener=null;
+let lobbyListener=null;
 let myPos=null;
-let online=true;
+let hiding=false;
 let users={};
 let leafletMap=null;
 let myMarker=null;
 let myCircle=null;
 let otherMarkers={};
 let watchId=null;
-let updateInterval=null;
-let firebaseListener=null;
+let updateTimer=null;
 
-document.getElementById("splashAvatar").textContent=avatar;
+document.getElementById("myAvatarDisplay").textContent=avatar;
 
-// ===== Splash =====
-function checkReady(){
-  nickname=document.getElementById("nicknameInput").value.trim();
-  roomCode=document.getElementById("roomInput").value.trim();
-  const btn=document.getElementById("connectBtn");
-  if(nickname && roomCode){btn.classList.add("active");}
-  else{btn.classList.remove("active");}
+// ===== Page Navigation =====
+function showPage(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
 }
 
-// Enter키로 접속
-document.getElementById("nicknameInput").addEventListener("keydown",e=>{if(e.key==="Enter")document.getElementById("roomInput").focus();});
-document.getElementById("roomInput").addEventListener("keydown",e=>{if(e.key==="Enter")connect();});
+// ===== 1. 닉네임 =====
+function checkNick(){
+  nickname=document.getElementById("nickInput").value.trim();
+  const btn=document.getElementById("goLobbyBtn");
+  btn.className=nickname?"big-btn on":"big-btn off";
+}
+function goLobby(){
+  if(!nickname)return;
+  document.getElementById("lobbyAvatar").textContent=avatar;
+  document.getElementById("lobbyNick").textContent=nickname;
+  showPage("lobbyPage");
+  startLobbyListener();
+}
 
-function connect(){
-  if(!nickname||!roomCode)return;
+// ===== 2. 로비 =====
+function startLobbyListener(){
+  if(lobbyListener)db.ref("rooms").off("value",lobbyListener);
+  lobbyListener=db.ref("rooms").on("value",snap=>{
+    const data=snap.val()||{};
+    const listEl=document.getElementById("roomList");
+    const noEl=document.getElementById("noRooms");
+    const rooms=[];
+    Object.keys(data).forEach(k=>{
+      const r=data[k];
+      const uCount=r.users?Object.keys(r.users).length:0;
+      if(uCount>0)rooms.push({id:k,name:r.info?r.info.name:k,count:uCount});
+    });
+    if(rooms.length===0){
+      listEl.innerHTML='';
+      listEl.appendChild(noEl);
+      noEl.style.display="block";
+    }else{
+      noEl.style.display="none";
+      listEl.innerHTML=rooms.map(r=>
+        '<div class="room-item" onclick="joinRoom(\''+r.id+'\')">'
+        +'<div class="room-left">'
+        +'<div class="room-icon">🏠</div>'
+        +'<div><div class="room-name">'+r.name+'</div>'
+        +'<div class="room-count">👥 '+r.count+'명 접속 중</div></div></div>'
+        +'<button class="room-join" onclick="event.stopPropagation();joinRoom(\''+r.id+'\')">입장</button>'
+        +'</div>'
+      ).join("");
+    }
+  });
+}
+function stopLobbyListener(){
+  if(lobbyListener){db.ref("rooms").off("value",lobbyListener);lobbyListener=null;}
+}
 
-  // Firebase 경로: rooms/{roomCode}/users/{userId}
-  roomRef=db.ref("rooms/"+encodeURIComponent(roomCode)+"/users");
+// 방 만들기
+function showCreateModal(){document.getElementById("createModal").classList.add("show");document.getElementById("roomNameInput").value="";document.getElementById("roomNameInput").focus();}
+function hideCreateModal(){document.getElementById("createModal").classList.remove("show");}
+function createRoom(){
+  const name=document.getElementById("roomNameInput").value.trim();
+  if(!name)return;
+  hideCreateModal();
+  const roomId=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  db.ref("rooms/"+roomId+"/info").set({name:name,created:Date.now()});
+  joinRoom(roomId);
+}
 
-  document.getElementById("splash").style.display="none";
-  document.getElementById("mapPage").style.display="block";
-  document.getElementById("topAvatar").textContent=avatar;
-  document.getElementById("topName").textContent=nickname;
-  document.getElementById("roomBadge").textContent="🔑 "+roomCode;
+// 방 입장
+function joinRoom(roomId){
+  stopLobbyListener();
+  currentRoom=roomId;
 
+  // 방 이름 가져오기
+  db.ref("rooms/"+roomId+"/info/name").once("value",s=>{
+    const n=s.val()||roomId;
+    document.getElementById("mapRoomName").textContent="🏠 "+n;
+  });
+
+  roomUsersRef=db.ref("rooms/"+roomId+"/users");
+  roomUsersRef.child(userId).onDisconnect().remove();
+
+  showPage("mapPage");
+  hiding=false;
+  updateHideBtn();
   initMap();
   startGps();
-  listenUsers();
-
-  // 자동 삭제 설정
-  roomRef.child(userId).onDisconnect().remove();
-
-  updateInterval=setInterval(()=>{if(online&&myPos)publishLocation();},5000);
+  listenRoomUsers();
+  updateTimer=setInterval(()=>{if(myPos)publishMe();},5000);
 }
 
-// ===== Disconnect =====
-function showDisconnectModal(){document.getElementById("disconnectModal").classList.add("show");}
-function hideDisconnectModal(){document.getElementById("disconnectModal").classList.remove("show");}
-
-function disconnect(){
-  hideDisconnectModal();
-  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}
-  if(updateInterval){clearInterval(updateInterval);updateInterval=null;}
-  unpublish();
-  if(firebaseListener&&roomRef){roomRef.off("value",firebaseListener);firebaseListener=null;}
-  if(leafletMap){leafletMap.remove();leafletMap=null;}
-  myMarker=null;myCircle=null;otherMarkers={};myPos=null;users={};online=true;roomRef=null;
-
-  // UI 리셋
-  document.getElementById("mapPage").style.display="none";
-  document.getElementById("gpsLoading").style.display="block";
-  document.getElementById("gpsLoading").style.borderColor="rgba(79,195,247,0.2)";
-  document.getElementById("gpsLoading").innerHTML=
-    '<div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div>'
-    +'<div style="font-size:15px;font-weight:600">GPS 연결 중...</div>'
-    +'<div style="font-size:12px;color:#5a7a94;margin-top:6px">잠시만 기다려주세요</div>';
-  document.getElementById("userList").style.display="none";
-  document.getElementById("emptyMsg").style.display="none";
-  document.getElementById("recenterBtn").style.display="none";
-  document.getElementById("topStatus").style.color="#4FC3F7";
-  document.getElementById("topStatus").textContent="📡 접속 중";
-  const tb=document.getElementById("toggleBtn");
-  tb.style.background="rgba(255,107,107,0.15)";tb.style.color="#ff6b6b";tb.textContent="숨기기";
-
-  document.getElementById("splash").style.display="flex";
-}
-
-// ===== Map =====
+// ===== 3. 지도 =====
 function initMap(){
+  if(leafletMap)leafletMap.remove();
   leafletMap=L.map("map",{zoomControl:false}).setView([37.15,127.08],16);
   L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{
     attribution:"© OpenStreetMap, © CARTO"
   }).addTo(leafletMap);
   L.control.zoom({position:"bottomright"}).addTo(leafletMap);
+  myMarker=null;myCircle=null;otherMarkers={};
 }
 
-// ===== GPS =====
+// GPS
 function startGps(){
-  if(!navigator.geolocation){showGpsError("GPS를 지원하지 않는 기기입니다");return;}
-  navigator.geolocation.getCurrentPosition(onGpsSuccess,()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:8000});
-  watchId=navigator.geolocation.watchPosition(onGpsSuccess,
-    (err)=>{
+  if(!navigator.geolocation){showGpsErr("GPS를 지원하지 않는 기기입니다");return;}
+  navigator.geolocation.getCurrentPosition(onGps,()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:8000});
+  watchId=navigator.geolocation.watchPosition(onGps,
+    err=>{
       if(myPos)return;
-      if(err.code===1)showGpsError("위치 권한이 거부되었습니다\n\n브라우저 설정에서 위치를 허용해주세요");
-      else if(err.code===2)showGpsError("GPS 신호를 찾을 수 없습니다\n\n실외에서 다시 시도해주세요");
-      else showGpsError("위치 확인 시간 초과");
+      if(err.code===1)showGpsErr("위치 권한이 거부되었습니다\n\n브라우저 설정에서 위치를 허용해주세요");
+      else if(err.code===2)showGpsErr("GPS 신호를 찾을 수 없습니다");
+      else showGpsErr("위치 확인 시간 초과");
     },
     {enableHighAccuracy:true,maximumAge:5000,timeout:20000}
   );
 }
-
-function onGpsSuccess(p){
+function onGps(p){
   myPos={lat:p.coords.latitude,lon:p.coords.longitude};
-  document.getElementById("gpsLoading").style.display="none";
+  document.getElementById("gpsOverlay").style.display="none";
   document.getElementById("recenterBtn").style.display="flex";
   updateMyMarker();
-  if(online)publishLocation();
+  publishMe();
 }
-
-function showGpsError(msg){
-  const el=document.getElementById("gpsLoading");
+function showGpsErr(msg){
+  const el=document.getElementById("gpsOverlay");
   el.style.borderColor="rgba(255,107,107,0.3)";
   el.innerHTML='<div style="font-size:36px;margin-bottom:12px">⚠️</div>'
     +'<div style="font-size:14px;font-weight:600;white-space:pre-line;line-height:1.6">'+msg+'</div>'
     +'<button class="retry-btn" onclick="retryGps()">다시 시도 🔄</button>';
 }
-
 function retryGps(){
-  const el=document.getElementById("gpsLoading");
+  const el=document.getElementById("gpsOverlay");
   el.style.borderColor="rgba(79,195,247,0.2)";
   el.innerHTML='<div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div>'
     +'<div style="font-size:15px;font-weight:600">GPS 재연결 중...</div>';
   if(watchId!==null)navigator.geolocation.clearWatch(watchId);
   myPos=null;startGps();
 }
-
 function updateMyMarker(){
   if(!leafletMap||!myPos)return;
+  if(hiding)return; // 숨김 중이면 마커 안 보임
   if(!myMarker){
     const ic=L.divIcon({html:'<div style="font-size:30px;filter:drop-shadow(0 0 8px #4FC3F7);line-height:1">'+avatar+'</div>',className:"",iconSize:[36,36],iconAnchor:[18,18]});
     myMarker=L.marker([myPos.lat,myPos.lon],{icon:ic,zIndexOffset:1000}).addTo(leafletMap);
@@ -392,48 +437,72 @@ function updateMyMarker(){
   }
 }
 
-// ===== Firebase =====
-function publishLocation(){
-  if(!myPos||!roomRef)return;
-  roomRef.child(userId).set({id:userId,avatar,nickname,lat:myPos.lat,lon:myPos.lon,ts:Date.now()});
+// Firebase publish
+function publishMe(){
+  if(!roomUsersRef||!myPos)return;
+  roomUsersRef.child(userId).set({
+    id:userId,avatar,nickname,
+    lat:hiding?0:myPos.lat,lon:hiding?0:myPos.lon,
+    hidden:hiding,ts:Date.now()
+  });
 }
 
-function unpublish(){
-  if(roomRef)roomRef.child(userId).remove();
-}
-
-function listenUsers(){
-  if(!roomRef)return;
-  firebaseListener=roomRef.on("value",(snap)=>{
+// Listen
+function listenRoomUsers(){
+  if(roomUsersListener&&roomUsersRef)roomUsersRef.off("value",roomUsersListener);
+  roomUsersListener=roomUsersRef.on("value",snap=>{
     const data=snap.val()||{};
     const now=Date.now();
     users={};
     Object.keys(data).forEach(k=>{
-      if(k!==userId && now-data[k].ts<600000)users[k]=data[k];
+      if(now-data[k].ts<600000)users[k]=data[k];
     });
-    renderUsers();
+    renderBottom();
+    renderMarkers();
   });
 }
 
 // ===== Render =====
-function haversine(lat1,lon1,lat2,lon2){
-  const R=6371000,toRad=d=>d*Math.PI/180;
-  const dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1);
-  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+function hav(lat1,lon1,lat2,lon2){
+  const R=6371000,r=d=>d*Math.PI/180;
+  const dLat=r(lat2-lat1),dLon=r(lon2-lon1);
+  const a=Math.sin(dLat/2)**2+Math.cos(r(lat1))*Math.cos(r(lat2))*Math.sin(dLon/2)**2;
   return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
-function formatDist(m){return m<1000?Math.round(m)+"m":(m/1000).toFixed(1)+"km";}
-function timeAgo(ts){
-  const d=Math.floor((Date.now()-ts)/1000);
-  if(d<10)return"방금";if(d<60)return d+"초 전";if(d<3600)return Math.floor(d/60)+"분 전";
-  return Math.floor(d/3600)+"시간 전";
+function fmtDist(m){return m<1000?Math.round(m)+"m":(m/1000).toFixed(1)+"km";}
+
+function renderBottom(){
+  const panel=document.getElementById("bottomPanel");
+  const grid=document.getElementById("userGrid");
+  const arr=Object.values(users);
+  if(arr.length===0){panel.style.display="none";return;}
+  panel.style.display="block";
+  document.getElementById("recenterBtn").style.bottom=arr.length>0?"auto":"80px";
+  document.getElementById("recenterBtn").style.bottom=arr.length<=4?"140px":"200px";
+
+  const isSmall=arr.length>4;
+  const display=arr.slice(0,8);
+
+  grid.innerHTML=display.map(u=>{
+    const isMe=u.id===userId;
+    const isHidden=u.hidden;
+    let distText="";
+    if(!isMe&&!isHidden&&myPos&&u.lat!==0){
+      distText=fmtDist(hav(myPos.lat,myPos.lon,u.lat,u.lon));
+    }
+    const cls="ucard"+(isSmall?" sm":"")+(isMe?" me":"")+(isHidden?" hiding":"");
+    return '<div class="'+cls+'" onclick="'+((!isMe&&!isHidden&&u.lat!==0)?'leafletMap.setView(['+u.lat+','+u.lon+'],17)':'')+'">'+
+      '<div class="ua">'+u.avatar+'</div>'+
+      '<div class="un">'+(isMe?"나":u.nickname)+'</div>'+
+      (isHidden?'<div class="uh">숨김중</div>':
+       distText?'<div class="ud">'+distText+'</div>':'')+
+      '</div>';
+  }).join("");
 }
 
-function renderUsers(){
+function renderMarkers(){
   if(!leafletMap)return;
-  const arr=Object.values(users);
-  document.getElementById("countBadge").textContent="👥 "+arr.length+"명";
-
+  const arr=Object.values(users).filter(u=>u.id!==userId&&!u.hidden&&u.lat!==0);
   const curIds=new Set(arr.map(u=>u.id));
   Object.keys(otherMarkers).forEach(id=>{
     if(!curIds.has(id)){leafletMap.removeLayer(otherMarkers[id]);delete otherMarkers[id];}
@@ -448,51 +517,62 @@ function renderUsers(){
       otherMarkers[u.id]=m;
     }
   });
-
-  const listEl=document.getElementById("userList");
-  const emptyEl=document.getElementById("emptyMsg");
-  const scrollEl=document.getElementById("userScroll");
-  const reBtn=document.getElementById("recenterBtn");
-
-  if(arr.length>0){
-    listEl.style.display="block";emptyEl.style.display="none";
-    reBtn.style.bottom="38%";
-    scrollEl.innerHTML=arr.map(u=>{
-      const dist=myPos?formatDist(haversine(myPos.lat,myPos.lon,u.lat,u.lon)):"";
-      return '<div class="user-card" onclick="leafletMap.setView(['+u.lat+','+u.lon+'],17)">'
-        +'<div class="uav">'+u.avatar+'</div>'
-        +'<div class="uname">'+u.nickname+'</div>'
-        +(dist?'<div class="udist">📍 '+dist+'</div>':'')
-        +'<div class="utime">'+timeAgo(u.ts)+'</div></div>';
-    }).join("");
-  }else{
-    listEl.style.display="none";reBtn.style.bottom="80px";
-    emptyEl.style.display=myPos?"block":"none";
-  }
 }
 
-// ===== Controls =====
-function toggleOnline(){
-  const btn=document.getElementById("toggleBtn");
-  const st=document.getElementById("topStatus");
-  if(online){
-    online=false;unpublish();
-    btn.style.background="rgba(79,195,247,0.15)";btn.style.color="#4FC3F7";
-    btn.textContent="접속";st.style.color="#ff7043";st.textContent="⏸ 숨김";
+// ===== 숨기기 =====
+function toggleHide(){
+  hiding=!hiding;
+  updateHideBtn();
+  if(hiding){
+    // 내 마커 제거
+    if(myMarker){leafletMap.removeLayer(myMarker);myMarker=null;}
+    if(myCircle){leafletMap.removeLayer(myCircle);myCircle=null;}
   }else{
-    online=true;if(myPos)publishLocation();
-    btn.style.background="rgba(255,107,107,0.15)";btn.style.color="#ff6b6b";
-    btn.textContent="숨기기";st.style.color="#4FC3F7";st.textContent="📡 접속 중";
+    updateMyMarker();
   }
+  publishMe();
+}
+function updateHideBtn(){
+  const btn=document.getElementById("hideBtn");
+  if(hiding){btn.className="map-btn btn-hide hidden";btn.innerHTML="👁️ 보이기";}
+  else{btn.className="map-btn btn-hide";btn.innerHTML="👁️ 숨기기";}
+}
+
+// ===== 나가기 =====
+function showExitModal(){document.getElementById("exitModal").classList.add("show");}
+function hideExitModal(){document.getElementById("exitModal").classList.remove("show");}
+function leaveRoom(){
+  hideExitModal();
+  // 정리
+  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}
+  if(updateTimer){clearInterval(updateTimer);updateTimer=null;}
+  if(roomUsersRef){roomUsersRef.child(userId).remove();
+    if(roomUsersListener)roomUsersRef.off("value",roomUsersListener);roomUsersListener=null;}
+  if(leafletMap){leafletMap.remove();leafletMap=null;}
+  myMarker=null;myCircle=null;otherMarkers={};myPos=null;users={};hiding=false;
+  currentRoom="";roomUsersRef=null;
+
+  // GPS 오버레이 리셋
+  const ov=document.getElementById("gpsOverlay");
+  ov.style.display="block";ov.style.borderColor="rgba(79,195,247,0.2)";
+  ov.innerHTML='<div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div>'
+    +'<div style="font-size:15px;font-weight:600">GPS 연결 중...</div>'
+    +'<div style="font-size:12px;color:#5a7a94;margin-top:6px">잠시만 기다려주세요</div>';
+  document.getElementById("bottomPanel").style.display="none";
+  document.getElementById("recenterBtn").style.display="none";
+
+  // 로비로
+  showPage("lobbyPage");
+  startLobbyListener();
 }
 
 function recenter(){if(leafletMap&&myPos)leafletMap.setView([myPos.lat,myPos.lon],16);}
 
-// ===== Cleanup =====
-window.addEventListener("beforeunload",()=>unpublish());
-window.addEventListener("pagehide",()=>unpublish());
+// Cleanup
+window.addEventListener("beforeunload",()=>{if(roomUsersRef)roomUsersRef.child(userId).remove();});
+window.addEventListener("pagehide",()=>{if(roomUsersRef)roomUsersRef.child(userId).remove();});
 
-// ===== PWA =====
+// PWA
 if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{});}
 </script>
 </body>
