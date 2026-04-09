@@ -3,7 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a1628">
 <title>HERE - 실시간 위치 공유</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -61,7 +66,7 @@
   .top-left .status{font-size:11px;}
   .top-right{display:flex;gap:8px;align-items:center;}
   .badge{background:rgba(255,255,255,0.1);border-radius:20px;padding:6px 12px;color:#B3E5FC;font-size:12px;font-weight:600;}
-  .toggle-btn{border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .small-btn{border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;border:none;}
 
   .user-list{
     position:absolute;bottom:0;left:0;right:0;z-index:1000;
@@ -102,9 +107,26 @@
     font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;
   }
 
+  /* 접속 끊기 확인 모달 */
+  .modal-overlay{
+    position:fixed;top:0;left:0;right:0;bottom:0;z-index:3000;
+    background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal-box{
+    background:#1a2a3a;border-radius:18px;padding:28px 32px;text-align:center;
+    border:1px solid rgba(255,255,255,0.1);max-width:280px;width:90%;
+  }
+  .modal-box .icon{font-size:40px;margin-bottom:12px;}
+  .modal-box .title{color:#fff;font-size:16px;font-weight:700;margin-bottom:6px;}
+  .modal-box .desc{color:#8EACC1;font-size:13px;margin-bottom:20px;line-height:1.5;}
+  .modal-btns{display:flex;gap:10px;}
+  .modal-btns button{flex:1;padding:12px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;border:none;}
+  .btn-cancel{background:rgba(255,255,255,0.1);color:#8EACC1;}
+  .btn-disconnect{background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:#fff;}
+
   @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
   @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 </style>
 </head>
 <body>
@@ -136,8 +158,10 @@
     </div>
     <div class="top-right">
       <div class="badge" id="countBadge">👥 0명</div>
-      <button class="toggle-btn" id="toggleBtn" onclick="toggleOnline()"
-        style="background:rgba(255,107,107,0.2);border:1px solid rgba(255,107,107,0.4);color:#ff6b6b">숨기기</button>
+      <button class="small-btn" id="toggleBtn" onclick="toggleOnline()"
+        style="background:rgba(255,107,107,0.15);color:#ff6b6b">숨기기</button>
+      <button class="small-btn" onclick="showDisconnectModal()"
+        style="background:rgba(255,255,255,0.08);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3)">나가기</button>
     </div>
   </div>
 
@@ -157,6 +181,19 @@
   </div>
 
   <button class="recenter-btn" id="recenterBtn" onclick="recenter()">🎯</button>
+</div>
+
+<!-- 접속 끊기 확인 모달 -->
+<div class="modal-overlay" id="disconnectModal">
+  <div class="modal-box">
+    <div class="icon">👋</div>
+    <div class="title">접속을 끊을까요?</div>
+    <div class="desc">내 위치가 지도에서 사라지고<br>시작 화면으로 돌아갑니다</div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="hideDisconnectModal()">취소</button>
+      <button class="btn-disconnect" onclick="disconnect()">나가기</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -187,6 +224,8 @@ let myMarker=null;
 let myCircle=null;
 let otherMarkers={};
 let watchId=null;
+let updateInterval=null;
+let firebaseListener=null;
 
 document.getElementById("splashAvatar").textContent=avatar;
 
@@ -206,24 +245,67 @@ function connect(){
   initMap();
   startGps();
   listenUsers();
+  // 주기적 위치 업데이트
+  updateInterval=setInterval(()=>{if(online&&myPos)publishLocation();},5000);
+}
+
+// ===== Disconnect =====
+function showDisconnectModal(){
+  document.getElementById("disconnectModal").classList.add("show");
+}
+function hideDisconnectModal(){
+  document.getElementById("disconnectModal").classList.remove("show");
+}
+function disconnect(){
+  hideDisconnectModal();
+  // GPS 중지
+  if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}
+  // 주기적 업데이트 중지
+  if(updateInterval){clearInterval(updateInterval);updateInterval=null;}
+  // Firebase에서 내 위치 삭제
+  unpublish();
+  // Firebase 리스너 해제
+  if(firebaseListener){usersRef.off("value",firebaseListener);firebaseListener=null;}
+  // 지도 정리
+  if(leafletMap){leafletMap.remove();leafletMap=null;}
+  myMarker=null;myCircle=null;otherMarkers={};myPos=null;users={};online=true;
+
+  // UI 초기화
+  document.getElementById("mapPage").style.display="none";
+  document.getElementById("gpsLoading").style.display="block";
+  document.getElementById("gpsLoading").style.borderColor="rgba(79,195,247,0.2)";
+  document.getElementById("gpsLoading").innerHTML=
+    '<div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div>'
+    +'<div style="font-size:15px;font-weight:600">GPS 연결 중...</div>'
+    +'<div style="font-size:12px;color:#5a7a94;margin-top:6px">잠시만 기다려주세요</div>';
+  document.getElementById("userList").style.display="none";
+  document.getElementById("emptyMsg").style.display="none";
+  document.getElementById("recenterBtn").style.display="none";
+  document.getElementById("topStatus").style.color="#4FC3F7";
+  document.getElementById("topStatus").textContent="📡 접속 중";
+  const tb=document.getElementById("toggleBtn");
+  tb.style.background="rgba(255,107,107,0.15)";tb.style.color="#ff6b6b";tb.textContent="숨기기";
+
+  // 스플래시로 돌아가기
+  document.getElementById("splash").style.display="flex";
 }
 
 // ===== Map =====
 function initMap(){
   leafletMap=L.map("map",{zoomControl:false}).setView([37.15,127.08],16);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{attribution:"© OpenStreetMap, © CARTO"}).addTo(leafletMap);
+  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",{
+    attribution:"© OpenStreetMap, © CARTO"
+  }).addTo(leafletMap);
   L.control.zoom({position:"bottomright"}).addTo(leafletMap);
 }
 
 // ===== GPS =====
 function startGps(){
-  if(!navigator.geolocation){
-    showGpsError("GPS를 지원하지 않는 기기입니다");return;
-  }
+  if(!navigator.geolocation){showGpsError("GPS를 지원하지 않는 기기입니다");return;}
   navigator.geolocation.getCurrentPosition(onGpsSuccess,()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:8000});
   watchId=navigator.geolocation.watchPosition(onGpsSuccess,
     (err)=>{
-      if(myPos)return; // 이미 위치 받았으면 무시
+      if(myPos)return;
       if(err.code===1)showGpsError("위치 권한이 거부되었습니다\n\n브라우저 설정에서 위치를 허용해주세요");
       else if(err.code===2)showGpsError("GPS 신호를 찾을 수 없습니다\n\n실외에서 다시 시도해주세요");
       else showGpsError("위치 확인 시간 초과");
@@ -271,39 +353,29 @@ function updateMyMarker(){
   }
 }
 
-// ===== Firebase publish =====
+// ===== Firebase =====
 function publishLocation(){
   if(!myPos)return;
-  const data={id:userId,avatar,nickname,lat:myPos.lat,lon:myPos.lon,ts:Date.now()};
-  usersRef.child(userId).set(data);
+  usersRef.child(userId).set({id:userId,avatar,nickname,lat:myPos.lat,lon:myPos.lon,ts:Date.now()});
 }
 
 function unpublish(){
   usersRef.child(userId).remove();
 }
 
-// 접속 종료 시 자동 삭제
 usersRef.child(userId).onDisconnect().remove();
 
-// ===== Firebase listen =====
 function listenUsers(){
-  usersRef.on("value",(snap)=>{
+  firebaseListener=usersRef.on("value",(snap)=>{
     const data=snap.val()||{};
     const now=Date.now();
     users={};
     Object.keys(data).forEach(k=>{
-      if(k!==userId && now-data[k].ts<600000){
-        users[k]=data[k];
-      }
+      if(k!==userId && now-data[k].ts<600000) users[k]=data[k];
     });
     renderUsers();
   });
 }
-
-// ===== GPS 위치 주기적 업데이트 =====
-setInterval(()=>{
-  if(online&&myPos)publishLocation();
-},5000);
 
 // ===== Render =====
 function haversine(lat1,lon1,lat2,lon2){
@@ -320,10 +392,10 @@ function timeAgo(ts){
 }
 
 function renderUsers(){
+  if(!leafletMap)return;
   const arr=Object.values(users);
   document.getElementById("countBadge").textContent="👥 "+arr.length+"명";
 
-  // 마커 업데이트
   const curIds=new Set(arr.map(u=>u.id));
   Object.keys(otherMarkers).forEach(id=>{
     if(!curIds.has(id)){leafletMap.removeLayer(otherMarkers[id]);delete otherMarkers[id];}
@@ -339,7 +411,6 @@ function renderUsers(){
     }
   });
 
-  // 유저 리스트
   const listEl=document.getElementById("userList");
   const emptyEl=document.getElementById("emptyMsg");
   const scrollEl=document.getElementById("userScroll");
@@ -368,11 +439,11 @@ function toggleOnline(){
   const st=document.getElementById("topStatus");
   if(online){
     online=false;unpublish();
-    btn.style.background="rgba(79,195,247,0.2)";btn.style.border="1px solid rgba(79,195,247,0.4)";btn.style.color="#4FC3F7";
+    btn.style.background="rgba(79,195,247,0.15)";btn.style.color="#4FC3F7";
     btn.textContent="접속";st.style.color="#ff7043";st.textContent="⏸ 숨김";
   }else{
     online=true;if(myPos)publishLocation();
-    btn.style.background="rgba(255,107,107,0.2)";btn.style.border="1px solid rgba(255,107,107,0.4)";btn.style.color="#ff6b6b";
+    btn.style.background="rgba(255,107,107,0.15)";btn.style.color="#ff6b6b";
     btn.textContent="숨기기";st.style.color="#4FC3F7";st.textContent="📡 접속 중";
   }
 }
@@ -382,6 +453,11 @@ function recenter(){if(leafletMap&&myPos)leafletMap.setView([myPos.lat,myPos.lon
 // ===== Cleanup =====
 window.addEventListener("beforeunload",()=>unpublish());
 window.addEventListener("pagehide",()=>unpublish());
+
+// ===== PWA Service Worker =====
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
 </script>
 </body>
 </html>
