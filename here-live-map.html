@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>HERE - 실시간 위치 공유</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Noto Sans KR',-apple-system,sans-serif;overflow:hidden;height:100vh;height:100dvh;background:#0a1628;}
+
+  #splash{
+    height:100vh;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:linear-gradient(145deg,#0a1628,#132744 50%,#1a3a5c);color:#fff;padding:20px;text-align:center;
+  }
+  .globe{font-size:72px;margin-bottom:12px;animation:float 3s ease-in-out infinite;}
+  #splash h1{
+    font-size:28px;font-weight:800;margin:0 0 6px;
+    background:linear-gradient(135deg,#4FC3F7,#81D4FA,#B3E5FC);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  .sub{font-size:13px;color:#8EACC1;margin-bottom:32px;letter-spacing:2px;}
+  .card{
+    background:rgba(255,255,255,0.06);border-radius:16px;padding:20px 24px;
+    margin-bottom:24px;border:1px solid rgba(255,255,255,0.08);width:100%;max-width:300px;
+  }
+  .avatar-big{font-size:48px;margin-bottom:12px;}
+  #nicknameInput{
+    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+    border-radius:10px;padding:12px 14px;color:#fff;font-size:16px;text-align:center;
+    outline:none;width:85%;font-family:inherit;
+  }
+  #nicknameInput::placeholder{color:#5a7a94;}
+  .connect-btn{
+    background:rgba(255,255,255,0.1);border:none;border-radius:14px;
+    padding:14px 48px;color:#5a7a94;font-size:17px;font-weight:700;
+    cursor:not-allowed;transition:all 0.3s;font-family:inherit;
+  }
+  .connect-btn.active{
+    background:linear-gradient(135deg,#4FC3F7,#0288D1);color:#fff;cursor:pointer;
+    box-shadow:0 4px 20px rgba(79,195,247,0.35);
+  }
+  .connect-btn.active:active{transform:scale(0.96);}
+  .hint{font-size:11px;color:#5a7a94;margin-top:16px;max-width:260px;line-height:1.6;}
+
+  #mapPage{display:none;height:100vh;height:100dvh;position:relative;}
+  #map{width:100%;height:100%;}
+
+  .top-bar{
+    position:absolute;top:0;left:0;right:0;z-index:1000;
+    background:linear-gradient(180deg,rgba(10,22,40,0.92),rgba(10,22,40,0));
+    padding:12px 16px 28px;display:flex;align-items:center;justify-content:space-between;
+  }
+  .top-left{display:flex;align-items:center;gap:10px;}
+  .top-left .av{font-size:24px;}
+  .top-left .name{color:#fff;font-size:14px;font-weight:700;}
+  .top-left .status{font-size:11px;}
+  .top-right{display:flex;gap:8px;align-items:center;}
+  .badge{background:rgba(255,255,255,0.1);border-radius:20px;padding:6px 12px;color:#B3E5FC;font-size:12px;font-weight:600;}
+  .toggle-btn{border-radius:20px;padding:6px 12px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+
+  .user-list{
+    position:absolute;bottom:0;left:0;right:0;z-index:1000;
+    background:linear-gradient(0deg,rgba(10,22,40,0.95) 0%,rgba(10,22,40,0.85) 80%,transparent);
+    padding:32px 12px 16px;display:none;
+  }
+  .user-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;}
+  .user-card{
+    background:rgba(255,255,255,0.07);border-radius:14px;padding:12px 16px;
+    min-width:120px;cursor:pointer;border:1px solid rgba(255,255,255,0.08);
+    transition:transform 0.15s;flex-shrink:0;
+  }
+  .user-card:active{transform:scale(0.95);}
+  .uav{font-size:32px;text-align:center;margin-bottom:4px;}
+  .uname{color:#fff;font-size:13px;font-weight:600;text-align:center;white-space:nowrap;}
+  .udist{color:#4FC3F7;font-size:12px;text-align:center;margin-top:2px;}
+  .utime{color:#5a7a94;font-size:10px;text-align:center;margin-top:2px;}
+
+  .overlay{
+    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;
+    background:rgba(10,22,40,0.95);border-radius:18px;padding:28px 36px;
+    color:#fff;text-align:center;border:1px solid rgba(79,195,247,0.2);max-width:300px;
+  }
+  .empty-msg{
+    position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:1000;
+    background:rgba(10,22,40,0.9);border-radius:14px;padding:14px 24px;
+    border:1px solid rgba(79,195,247,0.2);text-align:center;display:none;
+  }
+  .recenter-btn{
+    position:absolute;right:12px;bottom:80px;z-index:1000;
+    background:rgba(10,22,40,0.9);border:1px solid rgba(79,195,247,0.3);
+    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;
+    display:none;align-items:center;justify-content:center;color:#fff;
+  }
+  .retry-btn{
+    margin-top:16px;background:linear-gradient(135deg,#4FC3F7,#0288D1);
+    border:none;border-radius:10px;padding:10px 28px;color:#fff;
+    font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;
+  }
+
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+</style>
+</head>
+<body>
+
+<!-- SPLASH -->
+<div id="splash">
+  <div class="globe">🌍</div>
+  <h1>HERE</h1>
+  <p class="sub">실시간 위치 공유</p>
+  <div class="card">
+    <div class="avatar-big" id="splashAvatar"></div>
+    <input id="nicknameInput" maxlength="12" placeholder="이름을 입력하세요" oninput="onNameInput()" onkeydown="if(event.key==='Enter')connect()">
+  </div>
+  <button class="connect-btn" id="connectBtn" onclick="connect()">접속하기 📡</button>
+  <p class="hint">접속하면 내 위치가 다른 접속자에게 보입니다<br>나가면 자동으로 사라집니다</p>
+</div>
+
+<!-- MAP -->
+<div id="mapPage">
+  <div id="map"></div>
+
+  <div class="top-bar">
+    <div class="top-left">
+      <span class="av" id="topAvatar"></span>
+      <div>
+        <div class="name" id="topName"></div>
+        <div class="status" id="topStatus" style="color:#4FC3F7">📡 접속 중</div>
+      </div>
+    </div>
+    <div class="top-right">
+      <div class="badge" id="countBadge">👥 0명</div>
+      <button class="toggle-btn" id="toggleBtn" onclick="toggleOnline()"
+        style="background:rgba(255,107,107,0.2);border:1px solid rgba(255,107,107,0.4);color:#ff6b6b">숨기기</button>
+    </div>
+  </div>
+
+  <div id="gpsLoading" class="overlay">
+    <div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div>
+    <div style="font-size:15px;font-weight:600">GPS 연결 중...</div>
+    <div style="font-size:12px;color:#5a7a94;margin-top:6px">잠시만 기다려주세요</div>
+  </div>
+
+  <div class="user-list" id="userList">
+    <div class="user-scroll" id="userScroll"></div>
+  </div>
+
+  <div class="empty-msg" id="emptyMsg">
+    <div style="color:#8EACC1;font-size:13px">아직 접속한 사람이 없어요 👀</div>
+    <div style="font-size:11px;color:#5a7a94;margin-top:4px">링크를 공유해보세요!</div>
+  </div>
+
+  <button class="recenter-btn" id="recenterBtn" onclick="recenter()">🎯</button>
+</div>
+
+<script>
+// ===== Firebase =====
+const firebaseConfig = {
+  apiKey: "AIzaSyDigW9GGdbEU7M1-YHHpvpdsmdQ--ywhUU",
+  authDomain: "here-gps.firebaseapp.com",
+  databaseURL: "https://here-gps-default-rtdb.firebaseio.com",
+  projectId: "here-gps",
+  storageBucket: "here-gps.firebasestorage.app",
+  messagingSenderId: "375478624169",
+  appId: "1:375478624169:web:9b9575483ee97de050eeb8"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const usersRef = db.ref("users");
+
+// ===== State =====
+const AVATARS=["🐻","🦊","🐱","🐶","🐸","🦁","🐧","🐼","🦄","🐲","🦅","🐬","🐝","🦋","🐢","🐙"];
+const userId = Math.random().toString(36).slice(2,10);
+const avatar = AVATARS[Math.floor(Math.random()*AVATARS.length)];
+let nickname="";
+let myPos=null;
+let online=true;
+let users={};
+let leafletMap=null;
+let myMarker=null;
+let myCircle=null;
+let otherMarkers={};
+let watchId=null;
+
+document.getElementById("splashAvatar").textContent=avatar;
+
+// ===== Splash =====
+function onNameInput(){
+  nickname=document.getElementById("nicknameInput").value.trim();
+  const btn=document.getElementById("connectBtn");
+  if(nickname){btn.classList.add("active");}else{btn.classList.remove("active");}
+}
+
+function connect(){
+  if(!nickname)return;
+  document.getElementById("splash").style.display="none";
+  document.getElementById("mapPage").style.display="block";
+  document.getElementById("topAvatar").textContent=avatar;
+  document.getElementById("topName").textContent=nickname;
+  initMap();
+  startGps();
+  listenUsers();
+}
+
+// ===== Map =====
+function initMap(){
+  leafletMap=L.map("map",{zoomControl:false}).setView([37.15,127.08],16);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OSM"}).addTo(leafletMap);
+  L.control.zoom({position:"bottomright"}).addTo(leafletMap);
+}
+
+// ===== GPS =====
+function startGps(){
+  if(!navigator.geolocation){
+    showGpsError("GPS를 지원하지 않는 기기입니다");return;
+  }
+  navigator.geolocation.getCurrentPosition(onGpsSuccess,()=>{},{enableHighAccuracy:false,maximumAge:60000,timeout:8000});
+  watchId=navigator.geolocation.watchPosition(onGpsSuccess,
+    (err)=>{
+      if(myPos)return; // 이미 위치 받았으면 무시
+      if(err.code===1)showGpsError("위치 권한이 거부되었습니다\n\n브라우저 설정에서 위치를 허용해주세요");
+      else if(err.code===2)showGpsError("GPS 신호를 찾을 수 없습니다\n\n실외에서 다시 시도해주세요");
+      else showGpsError("위치 확인 시간 초과");
+    },
+    {enableHighAccuracy:true,maximumAge:5000,timeout:20000}
+  );
+}
+
+function onGpsSuccess(p){
+  myPos={lat:p.coords.latitude,lon:p.coords.longitude};
+  document.getElementById("gpsLoading").style.display="none";
+  document.getElementById("recenterBtn").style.display="flex";
+  updateMyMarker();
+  if(online)publishLocation();
+}
+
+function showGpsError(msg){
+  const el=document.getElementById("gpsLoading");
+  el.style.borderColor="rgba(255,107,107,0.3)";
+  el.innerHTML='<div style="font-size:36px;margin-bottom:12px">⚠️</div>'
+    +'<div style="font-size:14px;font-weight:600;white-space:pre-line;line-height:1.6">'+msg+'</div>'
+    +'<button class="retry-btn" onclick="retryGps()">다시 시도 🔄</button>';
+}
+
+function retryGps(){
+  const el=document.getElementById("gpsLoading");
+  el.style.borderColor="rgba(79,195,247,0.2)";
+  el.innerHTML='<div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div>'
+    +'<div style="font-size:15px;font-weight:600">GPS 재연결 중...</div>';
+  if(watchId!==null)navigator.geolocation.clearWatch(watchId);
+  myPos=null;
+  startGps();
+}
+
+function updateMyMarker(){
+  if(!leafletMap||!myPos)return;
+  if(!myMarker){
+    const ic=L.divIcon({html:'<div style="font-size:30px;filter:drop-shadow(0 0 8px #4FC3F7);line-height:1">'+avatar+'</div>',className:"",iconSize:[36,36],iconAnchor:[18,18]});
+    myMarker=L.marker([myPos.lat,myPos.lon],{icon:ic,zIndexOffset:1000}).addTo(leafletMap);
+    myCircle=L.circle([myPos.lat,myPos.lon],{radius:30,color:"#4FC3F7",fillColor:"#4FC3F7",fillOpacity:0.1,weight:1}).addTo(leafletMap);
+    leafletMap.setView([myPos.lat,myPos.lon],16);
+  }else{
+    myMarker.setLatLng([myPos.lat,myPos.lon]);
+    myCircle.setLatLng([myPos.lat,myPos.lon]);
+  }
+}
+
+// ===== Firebase publish =====
+function publishLocation(){
+  if(!myPos)return;
+  const data={id:userId,avatar,nickname,lat:myPos.lat,lon:myPos.lon,ts:Date.now()};
+  usersRef.child(userId).set(data);
+}
+
+function unpublish(){
+  usersRef.child(userId).remove();
+}
+
+// 접속 종료 시 자동 삭제
+usersRef.child(userId).onDisconnect().remove();
+
+// ===== Firebase listen =====
+function listenUsers(){
+  usersRef.on("value",(snap)=>{
+    const data=snap.val()||{};
+    const now=Date.now();
+    users={};
+    Object.keys(data).forEach(k=>{
+      if(k!==userId && now-data[k].ts<600000){
+        users[k]=data[k];
+      }
+    });
+    renderUsers();
+  });
+}
+
+// ===== GPS 위치 주기적 업데이트 =====
+setInterval(()=>{
+  if(online&&myPos)publishLocation();
+},5000);
+
+// ===== Render =====
+function haversine(lat1,lon1,lat2,lon2){
+  const R=6371000,toRad=d=>d*Math.PI/180;
+  const dLat=toRad(lat2-lat1),dLon=toRad(lon2-lon1);
+  const a=Math.sin(dLat/2)**2+Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function formatDist(m){return m<1000?Math.round(m)+"m":(m/1000).toFixed(1)+"km";}
+function timeAgo(ts){
+  const d=Math.floor((Date.now()-ts)/1000);
+  if(d<10)return"방금";if(d<60)return d+"초 전";if(d<3600)return Math.floor(d/60)+"분 전";
+  return Math.floor(d/3600)+"시간 전";
+}
+
+function renderUsers(){
+  const arr=Object.values(users);
+  document.getElementById("countBadge").textContent="👥 "+arr.length+"명";
+
+  // 마커 업데이트
+  const curIds=new Set(arr.map(u=>u.id));
+  Object.keys(otherMarkers).forEach(id=>{
+    if(!curIds.has(id)){leafletMap.removeLayer(otherMarkers[id]);delete otherMarkers[id];}
+  });
+  arr.forEach(u=>{
+    const ic=L.divIcon({html:'<div style="font-size:24px;cursor:pointer;line-height:1">'+u.avatar+'</div>',className:"",iconSize:[30,30],iconAnchor:[15,15]});
+    if(otherMarkers[u.id]){otherMarkers[u.id].setLatLng([u.lat,u.lon]);otherMarkers[u.id].setIcon(ic);}
+    else{
+      const m=L.marker([u.lat,u.lon],{icon:ic}).addTo(leafletMap);
+      m.bindPopup('<div style="text-align:center;font-family:sans-serif"><div style="font-size:24px">'+u.avatar+'</div><b>'+u.nickname+'</b></div>');
+      m.on("click",()=>leafletMap.setView([u.lat,u.lon],17));
+      otherMarkers[u.id]=m;
+    }
+  });
+
+  // 유저 리스트
+  const listEl=document.getElementById("userList");
+  const emptyEl=document.getElementById("emptyMsg");
+  const scrollEl=document.getElementById("userScroll");
+  const reBtn=document.getElementById("recenterBtn");
+
+  if(arr.length>0){
+    listEl.style.display="block";emptyEl.style.display="none";
+    reBtn.style.bottom="38%";
+    scrollEl.innerHTML=arr.map(u=>{
+      const dist=myPos?formatDist(haversine(myPos.lat,myPos.lon,u.lat,u.lon)):"";
+      return '<div class="user-card" onclick="leafletMap.setView(['+u.lat+','+u.lon+'],17)">'
+        +'<div class="uav">'+u.avatar+'</div>'
+        +'<div class="uname">'+u.nickname+'</div>'
+        +(dist?'<div class="udist">📍 '+dist+'</div>':'')
+        +'<div class="utime">'+timeAgo(u.ts)+'</div></div>';
+    }).join("");
+  }else{
+    listEl.style.display="none";reBtn.style.bottom="80px";
+    emptyEl.style.display=myPos?"block":"none";
+  }
+}
+
+// ===== Controls =====
+function toggleOnline(){
+  const btn=document.getElementById("toggleBtn");
+  const st=document.getElementById("topStatus");
+  if(online){
+    online=false;unpublish();
+    btn.style.background="rgba(79,195,247,0.2)";btn.style.border="1px solid rgba(79,195,247,0.4)";btn.style.color="#4FC3F7";
+    btn.textContent="접속";st.style.color="#ff7043";st.textContent="⏸ 숨김";
+  }else{
+    online=true;if(myPos)publishLocation();
+    btn.style.background="rgba(255,107,107,0.2)";btn.style.border="1px solid rgba(255,107,107,0.4)";btn.style.color="#ff6b6b";
+    btn.textContent="숨기기";st.style.color="#4FC3F7";st.textContent="📡 접속 중";
+  }
+}
+
+function recenter(){if(leafletMap&&myPos)leafletMap.setView([myPos.lat,myPos.lon],16);}
+
+// ===== Cleanup =====
+window.addEventListener("beforeunload",()=>unpublish());
+window.addEventListener("pagehide",()=>unpublish());
+</script>
+</body>
+</html>
