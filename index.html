@@ -232,7 +232,7 @@ var curRoom="",curRoomId="",curRoomPw="",joinedAt=0;
 var roomRef=null,roomLis=null,lobbyLis=null,chatRef=null,chatLis=null;
 var myPos=null,hiding=false,users={},chatOpen=false,lastChatCount=0,seenChat=0;
 var myMk=null,oMks={},watchId=null,updTimer=null,pendJoin="",pendDel="";
-var geocoder=null,bubbleTimers={},activeBubbles={},prevMsgs=[];
+var geocoder=null,bubbleTimers={},activeBubbles={},prevMsgs=[],chatInited=false;
 
 // 저장 복원
 try{var sl=localStorage.getItem("here_login");if(sl){var ld=JSON.parse(sl);document.getElementById("authId").value=ld.id||"";document.getElementById("authPw").value=ld.pw||"";}}catch(e){}
@@ -328,7 +328,7 @@ function enterRoom(rid,rn){stopLobby();curRoomId=rid;curRoom=rn;roomRef=db.ref("
   roomRef.once("value",function(snap){var data=snap.val()||{},taken=Object.values(data).map(function(u){return u.avatar;}),pool=gender==="m"?MALE:FEMALE,avail=pool.filter(function(a){return taken.indexOf(a)<0;});
     myAvatar=avail.length>0?avail[Math.floor(Math.random()*avail.length)]:pool[Math.floor(Math.random()*pool.length)];
     document.getElementById("mapRoom").textContent=rn;roomRef.child(uid).onDisconnect().remove();
-    showPage("mapPage");hiding=false;chatOpen=false;seenChat=0;prevMsgs=[];activeBubbles={};updHideBtn();
+    showPage("mapPage");hiding=false;chatOpen=false;seenChat=0;prevMsgs=[];chatInited=false;activeBubbles={};updHideBtn();
     document.getElementById("chatPanel").classList.remove("show");document.getElementById("chatBtn").classList.remove("chat-on");
     initMap();startGps();listenRoom();listenChat();
     updTimer=setInterval(function(){if(myPos)pubMe();},5000);
@@ -359,19 +359,20 @@ function renderFriends(){
   }).join("");
   Object.keys(activeBubbles).forEach(function(buid){var bel=document.getElementById("bub_"+buid);if(bel&&activeBubbles[buid]){bel.textContent=activeBubbles[buid];bel.style.display="block";}});
 }
-function showFriend(fid){var u=users[fid];if(!u||u.hidden||u.lat===0)return;closeFP();var avEl=document.getElementById("fpAv");if(u.photo)avEl.innerHTML='<img src="'+u.photo+'">';else avEl.textContent=u.avatar;document.getElementById("fpName").textContent=u.nickname;document.getElementById("fpAddr").textContent="📌 주소 검색 중...";var dist=myPos?fD(hav(myPos.lat,myPos.lon,u.lat,u.lon)):"";document.getElementById("fpDist").textContent=dist?"📍 "+dist+" 거리":"";document.getElementById("friendPopup").style.display="block";gmap.panTo({lat:u.lat,lng:u.lon});gmap.setZoom(17);if(geocoder)geocoder.geocode({location:{lat:u.lat,lng:u.lon}},function(res,st){document.getElementById("fpAddr").textContent=(st==="OK"&&res[0])?"📌 "+res[0].formatted_address:"주소를 찾을 수 없습니다";});}
+function showFriend(fid){var u=users[fid];if(!u||u.hidden||u.lat===0)return;closeFP();var avEl=document.getElementById("fpAv");if(u.photo)avEl.innerHTML='<img src="'+u.photo+'">';else avEl.textContent=u.avatar;document.getElementById("fpName").textContent=u.nickname;document.getElementById("fpAddr").textContent="📌 주소 검색 중...";var dist=myPos?fD(hav(myPos.lat,myPos.lon,u.lat,u.lon)):"";document.getElementById("fpDist").textContent=dist?"📍 "+dist+" 거리":"";document.getElementById("friendPopup").style.display="block";gmap.panTo({lat:u.lat,lng:u.lon});gmap.setZoom(17);
+  fetch("https://maps.googleapis.com/maps/api/geocode/json?latlng="+u.lat+","+u.lon+"&key=AIzaSyDigW9GGdbEU7M1-YHHpvpdsmdQ--ywhUU&language=ko").then(function(r){return r.json();}).then(function(data){document.getElementById("fpAddr").textContent=(data.status==="OK"&&data.results[0])?"📌 "+data.results[0].formatted_address:"주소를 찾을 수 없습니다";}).catch(function(){document.getElementById("fpAddr").textContent="주소를 찾을 수 없습니다";});}
 function closeFP(){document.getElementById("friendPopup").style.display="none";}
 function renderMks(){if(!gmap)return;var arr=Object.values(users).filter(function(u){return u.id!==uid&&!u.hidden&&u.lat!==0;});var ids={};arr.forEach(function(u){ids[u.id]=true;});Object.keys(oMks).forEach(function(id){if(!ids[id]){oMks[id].setMap(null);delete oMks[id];}});arr.forEach(function(u){makeIcon(u.photo,u.avatar,false).then(function(icon){var pos={lat:u.lat,lng:u.lon};if(oMks[u.id])oMks[u.id].setPosition(pos);else{var mk=new google.maps.Marker({position:pos,map:gmap,icon:{url:icon.url,scaledSize:new google.maps.Size(icon.size,icon.size),anchor:new google.maps.Point(icon.size/2,icon.size/2)}});mk.addListener("click",function(){showFriend(u.id);});oMks[u.id]=mk;}});});}
 
 // 채팅 - joinedAt 이후 메시지만 표시
 function toggleChat(){chatOpen=!chatOpen;var panel=document.getElementById("chatPanel"),btn=document.getElementById("chatBtn"),fb=document.getElementById("floatBtns");
-  if(chatOpen){panel.classList.add("show");btn.classList.add("chat-on");seenChat=lastChatCount;updBadge();scrollChat();fb.style.bottom="calc(50vh + 8px)";}
+  if(chatOpen){panel.classList.add("show");btn.classList.add("chat-on");seenChat=lastChatCount;updBadge();scrollChat();fb.style.bottom="calc(50vh + 4px)";}
   else{panel.classList.remove("show");btn.classList.remove("chat-on");fb.style.bottom="80px";document.getElementById("chatInp").blur();}}
 function listenChat(){if(!chatRef)return;if(chatLis)chatRef.off("value",chatLis);
   chatLis=chatRef.orderByChild("ts").startAt(joinedAt).on("value",function(snap){
     var msgs=[];snap.forEach(function(c){msgs.push(c.val());});lastChatCount=msgs.length;
-    if(prevMsgs.length>0&&msgs.length>prevMsgs.length){for(var i=prevMsgs.length;i<msgs.length;i++){var m=msgs[i];if(m.uid!==uid)showBubble(m.uid,m.text);}}
-    prevMsgs=msgs;var el=document.getElementById("chatMsgs");
+    if(chatInited&&msgs.length>prevMsgs.length){for(var i=prevMsgs.length;i<msgs.length;i++){var m=msgs[i];if(m.uid!==uid)showBubble(m.uid,m.text);}}
+    chatInited=true;prevMsgs=msgs;var el=document.getElementById("chatMsgs");
     if(msgs.length===0){el.innerHTML='<div class="chat-empty">아직 메시지가 없어요</div>';return;}
     el.innerHTML=msgs.map(function(m){var isMe=m.uid===uid;var avInner=m.photo?'<img src="'+m.photo+'">':m.avatar||"👤";var t=new Date(m.ts);var ts=t.getHours()+":"+(t.getMinutes()<10?"0":"")+t.getMinutes();return '<div class="chat-msg'+(isMe?" mine":"")+'"><div class="cm-av">'+avInner+'</div><div class="cm-body"><div class="cm-name">'+(isMe?"나":m.nickname)+'</div><div class="cm-text">'+escHtml(m.text)+'</div><div class="cm-time">'+ts+'</div></div></div>';}).join("");
     if(chatOpen)seenChat=lastChatCount;updBadge();scrollChat();
@@ -384,14 +385,14 @@ function escHtml(t){var d=document.createElement("div");d.textContent=t;return d
 function showBubble(userId,text){activeBubbles[userId]=text;var el=document.getElementById("bub_"+userId);if(el){el.textContent=text;el.style.display="block";}if(bubbleTimers[userId])clearTimeout(bubbleTimers[userId]);bubbleTimers[userId]=setTimeout(function(){delete activeBubbles[userId];var bel=document.getElementById("bub_"+userId);if(bel)bel.style.display="none";},5000);}
 
 // 키보드 대응
-if(window.visualViewport){window.visualViewport.addEventListener("resize",function(){if(chatOpen){document.getElementById("chatPanel").style.maxHeight=window.visualViewport.height*0.5+"px";document.getElementById("floatBtns").style.bottom=window.visualViewport.height*0.5+8+"px";}});}
+if(window.visualViewport){window.visualViewport.addEventListener("resize",function(){if(chatOpen){document.getElementById("chatPanel").style.maxHeight=window.visualViewport.height*0.5+"px";document.getElementById("floatBtns").style.bottom=window.visualViewport.height*0.5+4+"px";}});}
 
 function toggleHide(){hiding=!hiding;updHideBtn();if(hiding){if(myMk){myMk.setMap(null);myMk=null;}}else updMyMk();pubMe();}
 function updHideBtn(){var b=document.getElementById("hideBtn");b.className=hiding?"mt-btn hide-on":"mt-btn";b.innerHTML=hiding?"👁️ 보이기":"👁️ 숨기기";}
 function viewAll(){var arr=Object.values(users).filter(function(u){return !u.hidden&&u.lat!==0;});if(arr.length===0)return;var bounds=new google.maps.LatLngBounds();arr.forEach(function(u){bounds.extend({lat:u.lat,lng:u.lon});});if(myPos&&!hiding)bounds.extend({lat:myPos.lat,lng:myPos.lon});gmap.fitBounds(bounds,{top:110,bottom:80,left:40,right:60});}
 function showExit(){document.getElementById("exitModal").classList.add("show");}
 function hideExit(){document.getElementById("exitModal").classList.remove("show");}
-function leaveRoom(){hideExit();if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}if(updTimer){clearInterval(updTimer);updTimer=null;}if(roomRef){roomRef.child(uid).remove();if(roomLis)roomRef.off("value",roomLis);roomLis=null;}if(chatRef&&chatLis){chatRef.off("value",chatLis);chatLis=null;}chatRef=null;gmap=null;myMk=null;oMks={};myPos=null;users={};hiding=false;roomRef=null;chatOpen=false;prevMsgs=[];activeBubbles={};joinedAt=0;
+function leaveRoom(){hideExit();if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}if(updTimer){clearInterval(updTimer);updTimer=null;}if(roomRef){roomRef.child(uid).remove();if(roomLis)roomRef.off("value",roomLis);roomLis=null;}if(chatRef&&chatLis){chatRef.off("value",chatLis);chatLis=null;}chatRef=null;gmap=null;myMk=null;oMks={};myPos=null;users={};hiding=false;roomRef=null;chatOpen=false;prevMsgs=[];chatInited=false;activeBubbles={};joinedAt=0;
   document.getElementById("gpsOv").style.display="block";document.getElementById("gpsOv").innerHTML='<div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div><div style="font-size:15px;font-weight:600">GPS 연결 중...</div><div style="font-size:12px;color:#999;margin-top:6px">잠시만 기다려주세요</div>';
   document.getElementById("friendBar").style.display="none";document.getElementById("floatBtns").style.display="none";document.getElementById("chatPanel").classList.remove("show");document.getElementById("friendPopup").style.display="none";
   showPage("lobbyPage");startLobby();}
