@@ -113,8 +113,6 @@
   .fi-av img{width:100%;height:100%;object-fit:cover;}
   .fi-nm{font-size:9px;color:#555;font-weight:600;margin-top:2px;max-width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(255,255,255,0.7);border-radius:4px;padding:1px 3px;}
   .fi.hid{opacity:0.4;}.fi-online{position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#4CAF50;border:2px solid #fff;}
-  .fi-bubble{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#333;color:#fff;font-size:10px;padding:4px 8px;border-radius:8px;white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;display:none;z-index:10;}
-  .fi-bubble::after{content:"";position:absolute;top:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-top-color:#333;}
 
   .float-btns{position:absolute;right:10px;z-index:1001;display:none;flex-direction:column;gap:8px;transition:bottom 0.3s;}
   .fbtn{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,0.95);box-shadow:0 1px 4px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;color:#555;position:relative;}
@@ -226,7 +224,7 @@ var db=null;try{if(typeof firebase!=='undefined'){firebase.initializeApp({apiKey
 
 var MALE=["👨","🧔","👴","🤵","👨‍🦱","👨‍🦰","👨‍🦳","👨‍🦲"],FEMALE=["👩","👧","👵","👩‍🦱","👩‍🦰","👩‍🦳","👱‍♀️","🧕"];
 var ROOM_NAMES=["우리가족","친구모임","동창회","여행팀","스터디","동호회","운동팀","모임방","프로젝트","우리반","번개","동네친구"];
-var uid=Math.random().toString(36).slice(2,10);
+var uid=(function(){try{var s=localStorage.getItem("here_uid");if(s)return s;var n=Math.random().toString(36).slice(2,10);localStorage.setItem("here_uid",n);return n;}catch(e){return Math.random().toString(36).slice(2,10);}})();
 var myId="",nick="",gender="",myAvatar="👤",myPhoto="",isAdmin=false,isGuest=false,authMode="login";
 var curRoom="",curRoomId="",curRoomPw="",joinedAt=0;
 var roomRef=null,roomLis=null,lobbyLis=null,chatRef=null,chatLis=null;
