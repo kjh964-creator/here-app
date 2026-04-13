@@ -1,746 +1,435 @@
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0a1628">
+<meta name="theme-color" content="#f5f7fa">
 <title>HERE - 실시간 위치 공유</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap');
   *{margin:0;padding:0;box-sizing:border-box;}
-  body{font-family:'Noto Sans KR',-apple-system,sans-serif;overflow:hidden;height:100vh;height:100dvh;background:#0a1628;}
-
-  .page{height:100vh;height:100dvh;display:none;flex-direction:column;
-    background:linear-gradient(145deg,#0a1628,#132744 50%,#1a3a5c);color:#fff;}
+  body{font-family:'Noto Sans KR',-apple-system,sans-serif;overflow:hidden;height:100vh;height:100dvh;background:#f5f7fa;}
+  .page{height:100vh;height:100dvh;display:none;flex-direction:column;color:#333;}
   .page.active{display:flex;}
 
-  /* ===== 닉네임 페이지 ===== */
-  #nickPage{align-items:center;justify-content:center;padding:24px;text-align:center;}
-  .globe{font-size:72px;margin-bottom:12px;animation:float 3s ease-in-out infinite;}
-  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-  #nickPage h1{
-    font-size:28px;font-weight:800;margin:0 0 6px;
-    background:linear-gradient(135deg,#4FC3F7,#81D4FA,#B3E5FC);
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  }
-  .sub{font-size:13px;color:#8EACC1;margin-bottom:32px;letter-spacing:2px;}
-  .card{
-    background:rgba(255,255,255,0.06);border-radius:16px;padding:20px 24px;
-    margin-bottom:24px;border:1px solid rgba(255,255,255,0.08);width:100%;max-width:300px;
-  }
-  .avatar-big{font-size:48px;margin-bottom:12px;}
-  .gender-row{display:flex;gap:12px;justify-content:center;margin-bottom:16px;}
-  .gender-btn{
-    padding:8px 24px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);
-    background:rgba(255,255,255,0.05);color:#8EACC1;font-size:14px;cursor:pointer;
-    transition:all 0.3s;font-family:inherit;
-  }
-  .gender-btn.sel{background:rgba(79,195,247,0.2);border-color:rgba(79,195,247,0.5);color:#4FC3F7;}
-  .nick-input{
-    background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
-    border-radius:10px;padding:12px 14px;color:#fff;font-size:16px;text-align:center;
-    outline:none;width:85%;font-family:inherit;
-  }
-  .nick-input::placeholder{color:#5a7a94;}
-  .connect-btn{
-    background:rgba(255,255,255,0.1);border:none;border-radius:14px;
-    padding:14px 48px;color:#5a7a94;font-size:17px;font-weight:700;
-    cursor:not-allowed;transition:all 0.3s;font-family:inherit;
-  }
-  .connect-btn.active{
-    background:linear-gradient(135deg,#4FC3F7,#0288D1);color:#fff;cursor:pointer;
-    box-shadow:0 4px 20px rgba(79,195,247,0.3);
-  }
+  /* 로그인 */
+  #authPage{align-items:center;justify-content:flex-start;padding:0 24px 24px;text-align:center;overflow-y:auto;background:#f5f7fa;padding-top:max(40px,env(safe-area-inset-top));}
+  .auth-logo{margin-bottom:18px;}.auth-logo .globe{font-size:48px;margin-bottom:4px;animation:float 3s ease-in-out infinite;}
+  .auth-logo h1{font-size:26px;font-weight:800;color:#1565C0;margin:0 0 2px;}.auth-logo .sub{font-size:12px;color:#999;letter-spacing:2px;margin:0;}
+  .acard{background:#fff;border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,0.06);width:100%;max-width:340px;}
+  .acard-label{font-size:12px;color:#78909C;font-weight:600;margin-bottom:6px;text-align:left;}
+  .ainp{background:#f0f4f8;border:1.5px solid #e0e8f0;border-radius:10px;padding:12px 14px;color:#333;font-size:15px;text-align:center;outline:none;width:100%;font-family:inherit;margin-bottom:8px;}
+  .ainp::placeholder{color:#bbb;}.ainp:focus{border-color:#42A5F5;background:#fff;}
+  .aquick-row{display:flex;gap:8px;}.aquick-row .ainp{flex:1;margin:0;}
+  .aquick-btn{background:#607D8B;border-radius:10px;padding:12px 20px;color:#fff;font-size:14px;font-weight:600;border:none;cursor:pointer;font-family:inherit;white-space:nowrap;}
+  .aquick-note{font-size:10px;color:#bbb;margin-top:6px;}
+  .adivider{display:flex;align-items:center;gap:12px;margin-bottom:14px;width:100%;max-width:340px;}
+  .adivider div{flex:1;height:1px;background:#e0e0e0;}.adivider span{font-size:11px;color:#aaa;}
+  .save-row{display:flex;align-items:center;gap:6px;margin-bottom:10px;}
+  .save-row input[type=checkbox]{width:16px;height:16px;accent-color:#1976D2;cursor:pointer;}
+  .save-row label{font-size:11px;color:#999;cursor:pointer;}
+  .abtn{border:none;border-radius:12px;padding:14px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;width:100%;margin-bottom:10px;}
+  .abtn-blue{background:linear-gradient(135deg,#42A5F5,#1976D2);color:#fff;}.abtn-blue:active{transform:scale(0.98);}
+  .aerr{color:#e53935;font-size:12px;margin-top:6px;display:none;}
+  .aok{color:#1976D2;font-size:12px;margin-top:6px;display:none;}
+  .areg-link{font-size:12px;color:#aaa;margin-top:8px;}.areg-link span{color:#1976D2;font-weight:600;cursor:pointer;}
 
-  /* ===== 로비 페이지 ===== */
-  #lobbyPage{padding:0;}
-  .lobby-top{padding:20px 20px 12px;text-align:center;flex-shrink:0;}
-  .lobby-top h2{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;}
-  .lobby-top .nick-info{font-size:13px;color:#8EACC1;}
-  .lobby-actions{display:flex;gap:10px;padding:0 20px 12px;flex-shrink:0;}
-  .lobby-btn{
-    flex:1;padding:12px;border-radius:12px;border:none;font-size:14px;
-    font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.3s;
-  }
-  .lobby-btn.create{background:linear-gradient(135deg,#4FC3F7,#0288D1);color:#fff;}
-  .lobby-btn.refresh{background:rgba(255,255,255,0.08);color:#8EACC1;border:1px solid rgba(255,255,255,0.1);}
-  .room-list{flex:1;overflow-y:auto;padding:0 20px 20px;}
-  .room-item{
-    background:rgba(255,255,255,0.06);border-radius:14px;padding:16px;
-    margin-bottom:10px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;
-    transition:all 0.2s;display:flex;justify-content:space-between;align-items:center;
-  }
-  .room-item:active{background:rgba(79,195,247,0.1);border-color:rgba(79,195,247,0.3);}
-  .room-name{font-size:15px;font-weight:600;color:#fff;}
-  .room-count{font-size:12px;color:#4FC3F7;margin-top:2px;}
-  .room-arrow{color:#5a7a94;font-size:18px;}
-  .empty-lobby{text-align:center;padding:60px 20px;color:#5a7a94;font-size:14px;}
+  /* 프로필 */
+  #profilePage{align-items:center;justify-content:center;padding:24px;text-align:center;overflow-y:auto;background:#f5f7fa;}
+  .av-wrap{position:relative;width:80px;height:80px;margin:0 auto 6px;}
+  .av-circle{width:80px;height:80px;border-radius:50%;border:3px solid #fff;background:#e8e8e8;display:flex;align-items:center;justify-content:center;font-size:38px;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+  .av-circle img{width:100%;height:100%;object-fit:cover;}
+  .av-cam{position:absolute;bottom:-2px;right:-2px;width:26px;height:26px;border-radius:50%;background:#42A5F5;display:flex;align-items:center;justify-content:center;font-size:13px;border:2px solid #f5f7fa;cursor:pointer;color:#fff;}
+  .av-hint{color:#999;font-size:10px;margin-bottom:12px;}
+  .gender-row{display:flex;gap:10px;margin-top:4px;}
+  .gender-btn{flex:1;padding:14px;border-radius:12px;border:2px solid #e0e8f0;background:#fff;color:#78909C;font-size:15px;font-weight:600;cursor:pointer;text-align:center;font-family:inherit;}
+  .gender-btn.sel{border-color:#42A5F5;background:#e3f2fd;color:#1976D2;}
 
-  /* ===== 모달 ===== */
-  .modal-bg{
-    position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);
-    display:none;align-items:center;justify-content:center;z-index:9999;padding:20px;
-  }
+  /* 로비 */
+  #lobbyPage{padding:0;overflow-y:auto;background:linear-gradient(145deg,#0a1628,#132744 50%,#1a3a5c);color:#fff;}
+  .lobby-top{padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:linear-gradient(180deg,#0e1e30 80%,transparent);z-index:10;padding-top:24px;padding-bottom:12px;}
+  .lobby-top h2{font-size:20px;font-weight:800;}
+  .my-tag{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border-radius:30px;padding:4px 12px 4px 4px;}
+  .tag-av{width:28px;height:28px;border-radius:50%;border:2px solid #fff;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:14px;overflow:hidden;}
+  .tag-av img{width:100%;height:100%;object-fit:cover;}
+  .my-tag .tnm{color:#B3E5FC;font-size:12px;font-weight:600;}
+  .lobby-body{padding:0 20px 100px;}
+  .create-btn{width:100%;padding:18px;border:2px dashed rgba(79,195,247,0.3);border-radius:16px;background:rgba(79,195,247,0.05);color:#4FC3F7;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:20px;}
+  .sec-label{color:#5a7a94;font-size:12px;font-weight:600;margin-bottom:10px;letter-spacing:1px;}
+  .admin-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#FFA726;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .rlist{display:flex;flex-direction:column;gap:10px;}
+  .ritem{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;}
+  .rleft{display:flex;align-items:center;gap:12px;}
+  .ricon{font-size:24px;}.rname{color:#fff;font-size:15px;font-weight:700;}.rcnt{color:#8EACC1;font-size:12px;margin-top:2px;}
+  .rjoin{background:linear-gradient(135deg,#4FC3F7,#0288D1);border:none;border-radius:10px;padding:7px 14px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;}
+  .rdel{background:rgba(255,107,107,0.15);border:1px solid rgba(255,107,107,0.3);border-radius:10px;padding:7px 10px;color:#ff6b6b;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;margin-left:6px;}
+  .rpersist{color:#FFA726;font-size:10px;margin-top:2px;}
+  .no-rooms{text-align:center;padding:40px 20px;color:#5a7a94;font-size:14px;line-height:1.6;}
+  .name-suggest{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+  .name-suggest span{background:rgba(79,195,247,0.1);border:1px solid rgba(79,195,247,0.2);border-radius:8px;padding:6px 10px;font-size:12px;color:#4FC3F7;cursor:pointer;}
+
+  /* 모달 */
+  .modal-bg{position:fixed;top:0;left:0;right:0;bottom:0;z-index:3000;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;padding:20px;}
   .modal-bg.show{display:flex;}
-  .modal-box{
-    background:linear-gradient(145deg,#132744,#1a3a5c);border-radius:20px;
-    padding:28px 24px;width:100%;max-width:320px;border:1px solid rgba(79,195,247,0.15);
-  }
-  .modal-box h3{font-size:18px;font-weight:700;color:#fff;margin-bottom:16px;text-align:center;}
-  .modal-input{
-    width:100%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
-    border-radius:10px;padding:12px 14px;color:#fff;font-size:15px;outline:none;
-    font-family:inherit;margin-bottom:10px;
-  }
-  .modal-input::placeholder{color:#5a7a94;}
-  .modal-err{color:#ff7043;font-size:12px;text-align:center;display:none;margin-bottom:8px;}
-  .modal-btns{display:flex;gap:10px;margin-top:8px;}
-  .modal-btns button{
-    flex:1;padding:12px;border-radius:12px;border:none;font-size:14px;
-    font-weight:600;cursor:pointer;font-family:inherit;
-  }
-  .modal-cancel{background:rgba(255,255,255,0.08);color:#8EACC1;}
-  .modal-ok{background:linear-gradient(135deg,#4FC3F7,#0288D1);color:#fff;}
+  .modal{background:#1a2a3a;border-radius:20px;padding:26px;border:1px solid rgba(255,255,255,0.1);max-width:320px;width:100%;text-align:center;color:#fff;}
+  .modal h3{color:#fff;font-size:17px;font-weight:700;margin-bottom:14px;}
+  .minp{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;padding:13px 16px;color:#fff;font-size:16px;text-align:center;outline:none;width:100%;font-family:inherit;margin-bottom:10px;}
+  .minp::placeholder{color:#5a7a94;}.minp:focus{border-color:rgba(79,195,247,0.5);}
+  .modal p.desc{color:#8EACC1;font-size:12px;margin-bottom:14px;line-height:1.5;}
+  .modal-btns{display:flex;gap:10px;}
+  .modal-btns button{flex:1;padding:13px;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;border:none;}
+  .mb-cancel{background:rgba(255,255,255,0.1);color:#8EACC1;}
+  .mb-ok{background:linear-gradient(135deg,#4FC3F7,#0288D1);color:#fff;}
+  .mb-red{background:linear-gradient(135deg,#ff6b6b,#ee5a24);color:#fff;}
+  .modal .err{color:#ff6b6b;font-size:12px;margin-top:8px;display:none;}
+  .share-info{background:rgba(255,255,255,0.05);border-radius:12px;padding:14px;margin-bottom:14px;text-align:left;}
+  .share-info .si-title{color:#4FC3F7;font-size:13px;font-weight:700;margin-bottom:8px;}
+  .share-info .si-row{display:flex;justify-content:space-between;margin-bottom:4px;}
+  .share-info .si-label{color:#5a7a94;font-size:12px;}.share-info .si-val{color:#fff;font-size:12px;font-weight:600;}
+  .share-desc{background:rgba(79,195,247,0.08);border-radius:10px;padding:12px;margin-bottom:14px;color:#8EACC1;font-size:11px;line-height:1.6;text-align:left;}
+  /* 관리자 방 영구 체크 */
+  .persist-row{display:flex;align-items:center;gap:6px;margin:6px 0 10px;}
+  .persist-row input[type=checkbox]{width:16px;height:16px;accent-color:#FFA726;}
+  .persist-row label{font-size:11px;color:#8EACC1;cursor:pointer;}
 
-  /* ===== 지도 페이지 ===== */
-  #mapPage{position:relative;}
-  #map{flex:1;z-index:1;}
-  .top-bar{
-    position:absolute;top:0;left:0;right:0;z-index:1000;
-    background:linear-gradient(180deg,rgba(10,22,40,0.95),rgba(10,22,40,0.7) 80%,transparent);
-    padding:12px 16px 24px;display:flex;justify-content:space-between;align-items:center;
-  }
-  .top-left{display:flex;align-items:center;gap:8px;}
-  .top-room{font-size:15px;font-weight:700;color:#fff;}
-  .top-status{font-size:11px;color:#4FC3F7;}
-  .top-right{display:flex;gap:8px;}
-  .top-btn{
-    padding:6px 14px;border-radius:20px;border:none;font-size:12px;
-    font-weight:600;cursor:pointer;font-family:inherit;
-  }
-  .btn-hide{background:rgba(255,107,107,0.15);color:#ff6b6b;border:1px solid rgba(255,107,107,0.3);}
-  .btn-share{background:rgba(79,195,247,0.15);color:#4FC3F7;border:1px solid rgba(79,195,247,0.3);}
-  .btn-exit{background:rgba(255,255,255,0.08);color:#8EACC1;border:1px solid rgba(255,255,255,0.1);}
+  /* 지도 */
+  #mapPage{position:relative;background:#f5f7fa;}
+  #map{width:100%;height:100%;}
+  .map-top{position:absolute;top:8px;left:8px;right:8px;z-index:1000;background:rgba(255,255,255,0.95);backdrop-filter:blur(8px);border-radius:14px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,0.1);}
+  .mt-room{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:#333;padding-left:4px;white-space:nowrap;overflow:hidden;}.mt-room span{font-size:16px;}
+  .mt-btns{display:flex;gap:5px;flex-shrink:0;}
+  .mt-btn{height:36px;border-radius:10px;display:flex;align-items:center;gap:3px;padding:0 12px;font-size:12px;font-weight:600;background:rgba(0,0,0,0.05);color:#555;cursor:pointer;border:none;font-family:inherit;white-space:nowrap;}
+  .mt-btn:active{background:rgba(0,0,0,0.1);}.mt-btn.hide-on{background:rgba(25,118,210,0.1);color:#1976D2;}
 
-  /* GPS 로딩 */
-  #gpsLoading{
-    position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1000;
-    text-align:center;color:#fff;
-  }
-  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-  .spin{animation:spin 2s linear infinite;display:inline-block;}
+  .friend-bar{position:absolute;top:62px;left:8px;right:58px;z-index:999;display:none;overflow-x:auto;padding:4px 0;}
+  .friend-bar::-webkit-scrollbar{display:none;}.friend-list{display:flex;gap:6px;}
+  .fi{text-align:center;cursor:pointer;flex-shrink:0;position:relative;}
+  .fi-av{width:40px;height:40px;border-radius:50%;border:2.5px solid #fff;background:#e8e8e8;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 1px 4px rgba(0,0,0,0.15);overflow:hidden;}
+  .fi-av.me{box-shadow:0 0 0 2px rgba(25,118,210,0.4),0 1px 4px rgba(0,0,0,0.15);}
+  .fi-av img{width:100%;height:100%;object-fit:cover;}
+  .fi-nm{font-size:9px;color:#555;font-weight:600;margin-top:2px;max-width:44px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(255,255,255,0.7);border-radius:4px;padding:1px 3px;}
+  .fi.hid{opacity:0.4;}.fi-online{position:absolute;top:0;right:0;width:10px;height:10px;border-radius:50%;background:#4CAF50;border:2px solid #fff;}
 
-  /* 하단 유저 카드 */
-  .user-cards{
-    position:absolute;bottom:0;left:0;right:0;z-index:1000;
-    background:linear-gradient(0deg,rgba(10,22,40,0.95),rgba(10,22,40,0.7) 80%,transparent);
-    padding:20px 12px 16px;
-  }
-  .cards-row{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;}
-  .u-card{
-    background:rgba(255,255,255,0.06);border-radius:12px;padding:8px 6px;
-    border:1px solid rgba(255,255,255,0.08);text-align:center;cursor:pointer;
-    transition:all 0.2s;min-width:70px;
-  }
-  .u-card:active{border-color:rgba(79,195,247,0.4);}
-  .u-card.big{min-width:75px;padding:10px 8px;}
-  .u-card .avatar{font-size:28px;margin-bottom:2px;}
-  .u-card.big .avatar{font-size:36px;margin-bottom:4px;}
-  .u-card .uname{color:#fff;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70px;}
-  .u-card .udist{color:#4FC3F7;font-size:10px;margin-top:1px;}
-  .u-card .utime{color:#5a7a94;font-size:9px;margin-top:1px;}
+  .float-btns{position:absolute;right:10px;z-index:1001;display:none;flex-direction:column;gap:8px;transition:bottom 0.3s;}
+  .fbtn{width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,0.95);box-shadow:0 1px 4px rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;font-size:18px;color:#555;position:relative;}
+  .fbtn:active{transform:scale(0.93);}.fbtn.chat-on{background:#1976D2;color:#fff;}
+  .chat-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:#ff4444;color:#fff;font-size:9px;font-weight:700;display:none;align-items:center;justify-content:center;padding:0 3px;}
 
-  .empty-map{
-    position:absolute;bottom:20px;left:50%;transform:translateX(-50%);z-index:1000;
-    background:rgba(10,22,40,0.9);border-radius:14px;padding:14px 24px;
-    border:1px solid rgba(79,195,247,0.2);text-align:center;
-  }
+  .chat-panel{position:fixed;bottom:0;left:0;right:0;z-index:3500;background:#fff;border-radius:14px 14px 0 0;box-shadow:0 -2px 12px rgba(0,0,0,0.15);display:none;flex-direction:column;max-height:50vh;}
+  .chat-panel.show{display:flex;}
+  .chat-header{padding:10px 14px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .chat-header span{font-size:13px;font-weight:700;color:#333;}
+  .chat-close{background:none;border:none;font-size:18px;cursor:pointer;color:#999;padding:4px;}
+  .chat-msgs{flex:1;overflow-y:auto;padding:6px 10px;display:flex;flex-direction:column;gap:2px;min-height:80px;background:#f5f5f5;}
+  .chat-msg{display:flex;gap:5px;align-items:flex-start;}.chat-msg.mine{flex-direction:row-reverse;}
+  .cm-av{width:24px;height:24px;border-radius:50%;border:1.5px solid #fff;background:#e8e8e8;display:flex;align-items:center;justify-content:center;font-size:12px;overflow:hidden;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,0.1);}
+  .cm-av img{width:100%;height:100%;object-fit:cover;}.cm-body{max-width:75%;}
+  .cm-name{font-size:9px;color:#999;margin-bottom:0;}.chat-msg.mine .cm-name{text-align:right;}
+  .cm-text{background:#e9ecef;border-radius:10px;padding:5px 10px;font-size:13px;color:#333;line-height:1.3;word-break:break-word;}
+  .chat-msg.mine .cm-text{background:#1976D2;color:#fff;}
+  .cm-time{font-size:8px;color:#bbb;margin-top:1px;}.chat-msg.mine .cm-time{text-align:right;}
+  .chat-input{display:flex;gap:8px;padding:10px 14px;border-top:1px solid #eee;background:#fff;flex-shrink:0;}
+  .chat-input input{flex:1;border:1.5px solid #ddd;border-radius:20px;padding:9px 14px;font-size:14px;outline:none;font-family:inherit;background:#fff;color:#333;}
+  .chat-input input:focus{border-color:#1976D2;}
+  .chat-send{width:36px;height:36px;border-radius:50%;background:#1976D2;border:none;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .chat-empty{text-align:center;padding:20px;color:#bbb;font-size:13px;}
 
-  /* 내위치 버튼 */
-  #recenterBtn{
-    position:absolute;right:12px;z-index:1000;
-    background:rgba(10,22,40,0.9);border:1px solid rgba(79,195,247,0.3);
-    border-radius:50%;width:44px;height:44px;font-size:20px;cursor:pointer;
-    display:none;align-items:center;justify-content:center;color:#fff;
-  }
+  .friend-popup{position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:1002;background:rgba(255,255,255,0.97);border-radius:14px;padding:16px 20px;box-shadow:0 4px 16px rgba(0,0,0,0.15);display:none;text-align:center;min-width:200px;}
+  .fp-close{position:absolute;top:8px;right:12px;background:none;border:none;font-size:16px;cursor:pointer;color:#999;}
+  .fp-av{width:50px;height:50px;border-radius:50%;border:3px solid #fff;background:#e8e8e8;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 8px;box-shadow:0 1px 4px rgba(0,0,0,0.12);overflow:hidden;}
+  .fp-av img{width:100%;height:100%;object-fit:cover;}
+  .fp-name{font-size:15px;font-weight:700;color:#333;margin-bottom:4px;}.fp-addr{font-size:11px;color:#666;line-height:1.4;margin-bottom:10px;}.fp-dist{font-size:12px;color:#1976D2;font-weight:600;}
 
-  /* 공유 모달 */
-  .share-ok{color:#4FC3F7;font-size:13px;text-align:center;margin-top:8px;display:none;}
+  .gps-ov{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2000;background:rgba(255,255,255,0.95);border-radius:18px;padding:28px 36px;color:#333;text-align:center;max-width:300px;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+  .retry{margin-top:16px;background:linear-gradient(135deg,#42A5F5,#1976D2);border:none;border-radius:10px;padding:10px 28px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;}
 
-  /* Leaflet 커스텀 */
-  .leaflet-control-zoom{display:none!important;}
-  .leaflet-control-attribution{font-size:8px!important;opacity:0.5!important;}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
+<input type="file" id="photoFile" accept="image/*" style="display:none" onchange="onPhoto(event)">
 
-<!-- ===== 닉네임 페이지 ===== -->
-<div id="nickPage" class="page active">
-  <div class="globe">🌍</div>
-  <h1>HERE</h1>
-  <div class="sub">실시간 위치 공유</div>
-  <div class="card">
-    <div class="avatar-big" id="previewAvatar">🧑</div>
-    <div class="gender-row">
-      <button class="gender-btn sel" onclick="pickGender('m',this)">👨 남성</button>
-      <button class="gender-btn" onclick="pickGender('f',this)">👩 여성</button>
-    </div>
-    <input class="nick-input" id="nickInput" placeholder="닉네임을 입력하세요" maxlength="8" oninput="checkNick()">
+<!-- 1. 로그인 -->
+<div class="page active" id="authPage">
+  <div class="auth-logo"><div class="globe">🌍</div><h1>HERE</h1><p class="sub">실시간 위치 공유</p></div>
+  <div class="acard">
+    <div class="acard-label">빠른 접속</div>
+    <div class="aquick-row"><input class="ainp" id="quickNick" maxlength="12" placeholder="닉네임" onkeydown="if(event.key==='Enter')quickJoin()" style="margin:0"><button class="aquick-btn" onclick="quickJoin()">접속</button></div>
+    <div class="aquick-note">방 참여만 가능합니다</div>
   </div>
-  <button class="connect-btn" id="nickBtn" onclick="goLobby()">입장하기</button>
-</div>
-
-<!-- ===== 로비 페이지 ===== -->
-<div id="lobbyPage" class="page">
-  <div class="lobby-top">
-    <h2>🏠 로비</h2>
-    <div class="nick-info" id="lobbyNick"></div>
-  </div>
-  <div class="lobby-actions">
-    <button class="lobby-btn create" onclick="showCreate()">+ 방 만들기</button>
-    <button class="lobby-btn refresh" onclick="loadRooms()">🔄 새로고침</button>
-    <button class="lobby-btn refresh" onclick="exitLobby()">🚪 나가기</button>
-  </div>
-  <div class="room-list" id="roomList">
-    <div class="empty-lobby">아직 열린 방이 없어요<br>방을 만들어보세요! 🏠</div>
+  <div class="adivider"><div></div><span>또는</span><div></div></div>
+  <div class="acard">
+    <input class="ainp" id="authId" maxlength="20" placeholder="아이디">
+    <input class="ainp" id="authPw" type="password" maxlength="20" placeholder="비밀번호" onkeydown="if(event.key==='Enter')doAuth()">
+    <div id="regFields" style="display:none"><input class="ainp" id="authPw2" type="password" maxlength="20" placeholder="비밀번호 확인"></div>
+    <div class="save-row"><input type="checkbox" id="saveCheck" checked><label for="saveCheck">로그인 정보 저장</label></div>
+    <button class="abtn abtn-blue" id="authBtn" onclick="doAuth()">로그인</button>
+    <div class="aerr" id="authErr"></div><div class="aok" id="authOk"></div>
+    <div class="areg-link" id="regToggle">계정이 없으신가요? <span onclick="toggleReg()">회원가입</span></div>
   </div>
 </div>
 
-<!-- ===== 지도 페이지 ===== -->
-<div id="mapPage" class="page">
-  <div class="top-bar">
-    <div class="top-left">
-      <span class="top-room" id="mapRoom">방이름</span>
-      <span class="top-status" id="topStatus">📡 접속 중</span>
-    </div>
-    <div class="top-right">
-      <button class="top-btn btn-hide" id="toggleBtn" onclick="toggleOnline()">숨기기</button>
-      <button class="top-btn btn-share" onclick="showShare()">공유</button>
-      <button class="top-btn btn-exit" onclick="confirmExit()">나가기</button>
-    </div>
+<!-- 2. 프로필 -->
+<div class="page" id="profilePage">
+  <div style="font-size:20px;font-weight:800;color:#333;margin-bottom:4px">프로필 설정</div>
+  <p style="font-size:13px;color:#999;margin-bottom:24px">사진과 닉네임을 설정하세요</p>
+  <div class="acard">
+    <div class="av-wrap" onclick="document.getElementById('photoFile').click()"><div class="av-circle" id="avPrev">👤</div><div class="av-cam">📷</div></div>
+    <div class="av-hint">터치해서 사진 올리기</div>
+    <div class="acard-label">닉네임</div>
+    <input class="ainp" id="nickInp" maxlength="12" placeholder="닉네임을 입력하세요" oninput="chkProfile()">
+    <div class="acard-label" style="margin-top:8px">성별</div>
+    <div class="gender-row"><div class="gender-btn" id="gM" onclick="pickG('m')">🙋‍♂️ 남자</div><div class="gender-btn" id="gF" onclick="pickG('f')">🙋‍♀️ 여자</div></div>
   </div>
+  <button class="abtn abtn-blue" id="profileBtn" style="max-width:340px;opacity:0.5" onclick="saveProfile()">완료 ✓</button>
+</div>
+
+<!-- 3. 로비 -->
+<div class="page" id="lobbyPage">
+  <div class="lobby-top"><h2>🏠 로비</h2><div style="display:flex;align-items:center;gap:8px"><button class="admin-btn" id="adminBtn" onclick="showAdmin()" style="display:none">⚙️</button><div class="my-tag"><div class="tag-av" id="lobbyAv">👤</div><span class="tnm" id="lobbyNk"></span></div></div></div>
+  <div class="lobby-body">
+    <button class="create-btn" id="createBtnEl" onclick="showCreate()">＋ 새 방 만들기</button>
+    <div class="sec-label">현재 열린 방</div>
+    <div class="rlist" id="roomList"><div class="no-rooms" id="noRooms">열린 방이 없습니다<br>새 방을 만들어보세요!</div></div>
+  </div>
+</div>
+
+<!-- 모달들 -->
+<div class="modal-bg" id="createModal"><div class="modal"><h3>🏷️ 방 만들기</h3><input class="minp" id="cNm" maxlength="20" placeholder="방 이름" onkeydown="if(event.key==='Enter')document.getElementById('cPw').focus()"><div class="name-suggest" id="nameSuggest"></div><input class="minp" id="cPw" type="tel" maxlength="4" placeholder="비밀번호 (숫자 4자리)" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')doCreate()" style="margin-top:12px"><div class="persist-row" id="persistRow" style="display:none"><input type="checkbox" id="persistCheck"><label for="persistCheck">영구 방 (아무도 없어도 유지)</label></div><p class="desc">비밀번호를 아는 사람만 입장할 수 있어요</p><div class="modal-btns"><button class="mb-cancel" onclick="hideCreate()">취소</button><button class="mb-ok" onclick="doCreate()">만들기</button></div><div class="err" id="cErr"></div></div></div>
+<div class="modal-bg" id="joinModal"><div class="modal"><h3>🔑 비밀번호 입력</h3><div style="color:#8EACC1;font-size:13px;margin-bottom:12px" id="jLabel"></div><input class="minp" id="jPw" type="tel" maxlength="4" placeholder="숫자 4자리" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,'')" onkeydown="if(event.key==='Enter')doJoin()"><div class="modal-btns" style="margin-top:14px"><button class="mb-cancel" onclick="hideJoin()">취소</button><button class="mb-ok" onclick="doJoin()">입장</button></div><div class="err" id="jErr"></div></div></div>
+<div class="modal-bg" id="shareModal"><div class="modal"><h3>🔗 방 공유하기</h3><div class="share-info"><div class="si-title">HERE - 실시간 위치 공유</div><div class="si-row"><span class="si-label">방 이름</span><span class="si-val" id="sNm"></span></div><div class="si-row"><span class="si-label">비밀번호</span><span class="si-val" id="sPw"></span></div><div class="si-row" id="sAppRow" style="display:none"><span class="si-label">앱 다운로드</span><span class="si-val" id="sApp" style="color:#4FC3F7"></span></div></div><div class="share-desc">📍 접속하면 같은 방의 사람들과 실시간 위치를 공유합니다<br><br>✅ 같은 비밀번호를 입력한 사람만 볼 수 있어요<br>✅ 숨기기로 위치를 잠시 숨길 수 있어요<br>✅ 나가면 내 위치는 자동으로 삭제돼요</div><div class="modal-btns"><button class="mb-cancel" onclick="hideShare()">닫기</button><button class="mb-ok" onclick="copyShare()">📋 복사하기</button></div><div class="err" id="shareOk" style="color:#4FC3F7"></div></div></div>
+<div class="modal-bg" id="exitModal"><div class="modal"><div style="font-size:40px;margin-bottom:12px">👋</div><h3>방을 나갈까요?</h3><p class="desc">내 위치가 사라지고 로비로 돌아갑니다</p><div class="modal-btns"><button class="mb-cancel" onclick="hideExit()">취소</button><button class="mb-red" onclick="leaveRoom()">나가기</button></div></div></div>
+<div class="modal-bg" id="delModal"><div class="modal"><h3>⚠️ 방 삭제</h3><p class="desc" id="delDesc"></p><div class="modal-btns"><button class="mb-cancel" onclick="hideDelModal()">취소</button><button class="mb-red" onclick="confirmDel()">삭제</button></div></div></div>
+<div class="modal-bg" id="adminModal"><div class="modal"><h3>⚙️ 관리자 설정</h3><div class="acard-label" style="color:#8EACC1;text-align:left">📱 앱 다운로드 링크</div><input class="minp" id="appLinkInp" placeholder="앱 다운로드 URL 입력" style="font-size:13px;text-align:left"><div style="color:#5a7a94;font-size:10px;margin-bottom:14px;text-align:left">공유할 때 이 링크가 포함됩니다</div><div class="modal-btns"><button class="mb-cancel" onclick="hideAdmin()">닫기</button><button class="mb-ok" onclick="saveAdmin()">저장</button></div><div class="err" id="adminOk" style="color:#4FC3F7"></div></div></div>
+
+<!-- 4. 지도 -->
+<div class="page" id="mapPage">
   <div id="map"></div>
-  <div id="gpsLoading">
-    <div class="spin" style="font-size:36px;margin-bottom:12px">📡</div>
-    <div style="font-size:15px;font-weight:600">GPS 연결 중...</div>
-    <div style="font-size:11px;color:#5a7a94;margin-top:8px">위치 권한을 허용해주세요</div>
-  </div>
-  <button id="recenterBtn" onclick="recenter()">🎯</button>
-  <div id="userCards" class="user-cards" style="display:none;"></div>
-  <div id="emptyMap" class="empty-map" style="display:none;">
-    <div style="color:#8EACC1;font-size:13px">아직 접속한 사람이 없어요 👀</div>
-    <div style="font-size:11px;color:#5a7a94;margin-top:4px">공유 버튼으로 다른 사람을 초대하세요!</div>
-  </div>
+  <div class="map-top"><div class="mt-room"><span>🏠</span> <span id="mapRoom">방</span></div><div class="mt-btns"><button class="mt-btn" onclick="showShare()">🔗 공유</button><button class="mt-btn" id="hideBtn" onclick="toggleHide()">👁️ 숨기기</button><button class="mt-btn" onclick="showExit()">🚪 나가기</button></div></div>
+  <div class="friend-bar" id="friendBar"><div class="friend-list" id="friendList"></div></div>
+  <div class="friend-popup" id="friendPopup"><button class="fp-close" onclick="closeFP()">✕</button><div class="fp-av" id="fpAv">👤</div><div class="fp-name" id="fpName"></div><div class="fp-addr" id="fpAddr"></div><div class="fp-dist" id="fpDist"></div></div>
+  <div class="gps-ov" id="gpsOv"><div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div><div style="font-size:15px;font-weight:600">GPS 연결 중...</div><div style="font-size:12px;color:#999;margin-top:6px">잠시만 기다려주세요</div></div>
+  <div class="float-btns" id="floatBtns" style="bottom:80px;"><div style="position:relative"><button class="fbtn" id="chatBtn" onclick="toggleChat()">💬</button><div class="chat-badge" id="chatBadge">0</div></div><button class="fbtn" onclick="viewAll()">🔍</button><button class="fbtn" onclick="recenter()">🎯</button></div>
 </div>
+<div class="chat-panel" id="chatPanel"><div class="chat-header"><span>💬 채팅</span><button class="chat-close" onclick="toggleChat()">✕</button></div><div class="chat-msgs" id="chatMsgs"><div class="chat-empty">아직 메시지가 없어요</div></div><div class="chat-input"><input id="chatInp" placeholder="메시지 입력..." maxlength="200" onkeydown="if(event.key==='Enter')sendMsg()"><button class="chat-send" onclick="sendMsg()">➤</button></div></div>
 
-<!-- ===== 방 만들기 모달 ===== -->
-<div id="createModal" class="modal-bg" onclick="if(event.target===this)hideCreate()">
-  <div class="modal-box">
-    <h3>🏠 방 만들기</h3>
-    <input class="modal-input" id="cName" placeholder="방 이름" maxlength="20">
-    <input class="modal-input" id="cPw" placeholder="비밀번호 (4자리 숫자)" maxlength="4" inputmode="numeric" type="password">
-    <div class="modal-err" id="createErr"></div>
-    <div class="modal-btns">
-      <button class="modal-cancel" onclick="hideCreate()">취소</button>
-      <button class="modal-ok" onclick="doCreate()">만들기</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== 방 입장 모달 ===== -->
-<div id="joinModal" class="modal-bg" onclick="if(event.target===this)hideJoin()">
-  <div class="modal-box">
-    <h3>🔑 비밀번호 입력</h3>
-    <div id="joinLabel" style="text-align:center;color:#8EACC1;font-size:13px;margin-bottom:12px;"></div>
-    <input class="modal-input" id="joinPw" placeholder="비밀번호 4자리" maxlength="4" inputmode="numeric" type="password">
-    <div class="modal-err" id="joinErr"></div>
-    <div class="modal-btns">
-      <button class="modal-cancel" onclick="hideJoin()">취소</button>
-      <button class="modal-ok" onclick="doJoin()">입장</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== 나가기 확인 모달 ===== -->
-<div id="exitModal" class="modal-bg" onclick="if(event.target===this)hideExit()">
-  <div class="modal-box">
-    <h3>나가기</h3>
-    <div style="text-align:center;color:#8EACC1;font-size:14px;margin-bottom:16px;">방에서 나가시겠어요?<br>내 위치는 삭제됩니다.</div>
-    <div class="modal-btns">
-      <button class="modal-cancel" onclick="hideExit()">취소</button>
-      <button class="modal-ok" onclick="doExit()">나가기</button>
-    </div>
-  </div>
-</div>
-
-<!-- ===== 공유 모달 ===== -->
-<div id="shareModal" class="modal-bg" onclick="if(event.target===this)hideShare()">
-  <div class="modal-box">
-    <h3>📤 공유하기</h3>
-    <div style="text-align:center;color:#8EACC1;font-size:13px;margin-bottom:6px;">방 이름: <span id="sName" style="color:#fff;font-weight:600;"></span></div>
-    <div style="text-align:center;color:#8EACC1;font-size:13px;margin-bottom:16px;">비밀번호: <span id="sPw" style="color:#4FC3F7;font-weight:600;"></span></div>
-    <div class="modal-btns">
-      <button class="modal-cancel" onclick="hideShare()">닫기</button>
-      <button class="modal-ok" onclick="copyShare()">복사 / 공유</button>
-    </div>
-    <div class="share-ok" id="shareOk"></div>
-  </div>
-</div>
-
+<script>var gmap=null,gReady=false;function initGMap(){gReady=true;}</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC-0T9JMz8wjV1YDEYdJXdchfwmxDfimS4&callback=initGMap" async defer></script>
 <script>
-// =============================================
-//  ★★★ Firebase 설정 ★★★
-//  GitHub에 올린 버전에서 아래 값을 복사해 넣으세요
-// =============================================
-var firebaseConfig = {
-  apiKey: "AIzaSyDigW9GGdbEU7M1-YHHpvpdsmdQ--ywhUU",
-  authDomain: "here-gps.firebaseapp.com",
-  databaseURL: "https://here-gps-default-rtdb.firebaseio.com",
-  projectId: "here-gps",
-  storageBucket: "here-gps.firebasestorage.app",
-  messagingSenderId: "375478624169",
-  appId: "1:375478624169:web:9b9575483ee97de050eeb8"
-};
-firebase.initializeApp(firebaseConfig);
-var db = firebase.database();
+var db=null;try{if(typeof firebase!=='undefined'){firebase.initializeApp({apiKey:"AIzaSyDigW9GGdbEU7M1-YHHpvpdsmdQ--ywhUU",authDomain:"here-gps.firebaseapp.com",databaseURL:"https://here-gps-default-rtdb.firebaseio.com",projectId:"here-gps",storageBucket:"here-gps.firebasestorage.app",messagingSenderId:"375478624169",appId:"1:375478624169:web:9b9575483ee97de050eeb8"});db=firebase.database();}}catch(e){}
 
-// ===== 상수 =====
-var MALE = ["🧑","👨","👦","🧔","👨‍🦱","👨‍🦰","👨‍🦳","🧑‍🦱"];
-var FEMALE = ["👩","👧","👩‍🦱","👩‍🦰","👩‍🦳","🧑‍🦰","👱‍♀️","👩‍🦲"];
+var MALE=["👨","🧔","👴","🤵","👨‍🦱","👨‍🦰","👨‍🦳","👨‍🦲"],FEMALE=["👩","👧","👵","👩‍🦱","👩‍🦰","👩‍🦳","👱‍♀️","🧕"];
+var ROOM_NAMES=["우리가족","친구모임","동창회","여행팀","스터디","동호회","운동팀","모임방","프로젝트","우리반","번개","동네친구"];
+var uid=(function(){try{var s=localStorage.getItem("here_uid");if(s)return s;var n=Math.random().toString(36).slice(2,10);localStorage.setItem("here_uid",n);return n;}catch(e){return Math.random().toString(36).slice(2,10);}})();
+var myId="",nick="",gender="",myAvatar="👤",myPhoto="",isAdmin=false,isGuest=false,authMode="login";
+var curRoom="",curRoomId="",curRoomPw="",joinedAt=0;
+var roomRef=null,roomLis=null,lobbyLis=null,chatRef=null,chatLis=null;
+var myPos=null,hiding=false,users={},chatOpen=false,lastChatCount=0,seenChat=0;
+var myMk=null,oMks={},watchId=null,updTimer=null,pendJoin="",pendDel="";
+var geocoder=null,prevMsgs=[],chatInited=false,appLink="";
 
-// ===== 전역 변수 =====
-var uid = "u_" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
-var nickname = "";
-var gender = "m";
-var myAvatar = "🧑";
-var curRoomId = "";
-var curRoom = "";
-var curRoomPw = "";
-var roomRef = null;
-var lobbyRef = null;
-var pendJoin = "";
-var leafletMap = null;
-var myMarker = null;
-var markers = {};
-var myPos = null;
-var watchId = null;
-var online = true;
-var updTimer = null;
+// 저장 복원
+try{var sl=localStorage.getItem("here_login");if(sl){var ld=JSON.parse(sl);document.getElementById("authId").value=ld.id||"";document.getElementById("authPw").value=ld.pw||"";}}catch(e){}
+try{var sq=localStorage.getItem("here_quick");if(sq)document.getElementById("quickNick").value=sq;}catch(e){}
 
-// ===== 페이지 전환 =====
-function showPage(id) {
-  document.querySelectorAll(".page").forEach(function(p){ p.classList.remove("active"); });
-  document.getElementById(id).classList.add("active");
+function showPage(id){document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active")});document.getElementById(id).classList.add("active");}
+
+// 닉네임 빠른접속
+function quickJoin(){
+  var qn=document.getElementById("quickNick").value.trim();if(!qn)return;
+  try{localStorage.setItem("here_quick",qn);}catch(e){}
+  nick=qn;gender="m";isGuest=true;isAdmin=false;myId="guest_"+uid;myPhoto="";myAvatar="👤";goLobby();
 }
-
-// ===== 1. 닉네임 페이지 =====
-function pickGender(g, btn) {
-  gender = g;
-  document.querySelectorAll(".gender-btn").forEach(function(b){ b.classList.remove("sel"); });
-  btn.classList.add("sel");
-  document.getElementById("previewAvatar").textContent = g === "m" ? "🧑" : "👩";
+// 로그인
+function toggleReg(){
+  authMode=authMode==="login"?"reg":"login";
+  document.getElementById("regFields").style.display=authMode==="reg"?"block":"none";
+  document.getElementById("authBtn").textContent=authMode==="login"?"로그인":"회원가입";
+  document.getElementById("regToggle").innerHTML=authMode==="login"?'계정이 없으신가요? <span onclick="toggleReg()">회원가입</span>':'이미 계정이 있으신가요? <span onclick="toggleReg()">로그인</span>';
+  document.getElementById("authErr").style.display="none";document.getElementById("authOk").style.display="none";
 }
-
-function checkNick() {
-  var v = document.getElementById("nickInput").value.trim();
-  var btn = document.getElementById("nickBtn");
-  if (v.length > 0) {
-    btn.classList.add("active");
-    btn.disabled = false;
-  } else {
-    btn.classList.remove("active");
-    btn.disabled = true;
-  }
-}
-
-function goLobby() {
-  var v = document.getElementById("nickInput").value.trim();
-  if (!v) return;
-  nickname = v;
-  document.getElementById("lobbyNick").textContent = myAvatar + " " + nickname;
-  showPage("lobbyPage");
-  loadRooms();
-}
-
-function exitLobby() {
-  if (lobbyRef) { lobbyRef.off(); lobbyRef = null; }
-  showPage("nickPage");
-}
-
-// ===== 2. 로비 =====
-function loadRooms() {
-  if (lobbyRef) lobbyRef.off();
-  lobbyRef = db.ref("rooms");
-  lobbyRef.on("value", function(snap) {
-    var data = snap.val() || {};
-    var list = document.getElementById("roomList");
-    var items = [];
-    Object.keys(data).forEach(function(rid) {
-      var info = data[rid].info;
-      var users = data[rid].users || {};
-      if (!info) return;
-      var count = Object.keys(users).length;
-      // 10분 이상 아무도 없으면 삭제
-      if (count === 0 && info.created && Date.now() - info.created > 600000) {
-        db.ref("rooms/" + rid).remove();
-        return;
-      }
-      items.push({ id: rid, name: info.name, count: count, created: info.created || 0 });
+function doAuth(){
+  var id=document.getElementById("authId").value.trim().toLowerCase(),pw=document.getElementById("authPw").value.trim();
+  var err=document.getElementById("authErr"),ok=document.getElementById("authOk");err.style.display="none";ok.style.display="none";
+  if(!db){err.textContent="서버 연결 실패";err.style.display="block";return;}
+  if(id.length<2||pw.length<4){err.textContent="아이디 2자 이상, 비밀번호 4자 이상";err.style.display="block";return;}
+  var safeId=id.replace(/[.#$\[\]\/]/g,"_");
+  if(document.getElementById("saveCheck").checked)try{localStorage.setItem("here_login",JSON.stringify({id:id,pw:pw}));}catch(e){}
+  else try{localStorage.removeItem("here_login");}catch(e){}
+  if(authMode==="reg"){
+    var pw2=document.getElementById("authPw2").value.trim();
+    if(pw!==pw2){err.textContent="비밀번호가 일치하지 않습니다";err.style.display="block";return;}
+    db.ref("accounts/"+safeId).once("value",function(snap){
+      if(snap.val()){err.textContent="이미 존재하는 아이디입니다";err.style.display="block";return;}
+      db.ref("accounts/"+safeId).set({id:safeId,pw:pw,nickname:"",gender:"",photo:"",role:"user",created:Date.now()});
+      ok.textContent="✅ 가입 완료!";ok.style.display="block";myId=safeId;isAdmin=false;isGuest=false;
+      setTimeout(function(){showPage("profilePage");},800);
     });
-    items.sort(function(a, b) { return b.created - a.created; });
-    if (items.length === 0) {
-      list.innerHTML = '<div class="empty-lobby">아직 열린 방이 없어요<br>방을 만들어보세요! 🏠</div>';
-      return;
-    }
-    list.innerHTML = items.map(function(r) {
-      return '<div class="room-item" onclick="askJoin(\'' + r.id + '\',\'' + r.name.replace(/'/g, "\\'") + '\')">'
-        + '<div><div class="room-name">' + r.name + '</div><div class="room-count">👥 ' + r.count + '명 접속 중</div></div>'
-        + '<div class="room-arrow">›</div></div>';
-    }).join("");
-  });
-}
-
-function stopLobby() { if (lobbyRef) { lobbyRef.off(); lobbyRef = null; } }
-
-// ===== 방 만들기 =====
-function showCreate() {
-  document.getElementById("cName").value = "";
-  document.getElementById("cPw").value = "";
-  document.getElementById("createErr").style.display = "none";
-  document.getElementById("createModal").classList.add("show");
-  document.getElementById("cName").focus();
-}
-function hideCreate() { document.getElementById("createModal").classList.remove("show"); }
-function doCreate() {
-  var name = document.getElementById("cName").value.trim();
-  var pw = document.getElementById("cPw").value.trim();
-  var err = document.getElementById("createErr");
-  if (!name) { err.textContent = "방 이름을 입력하세요"; err.style.display = "block"; return; }
-  if (pw.length !== 4 || isNaN(pw)) { err.textContent = "비밀번호 4자리 숫자를 입력하세요"; err.style.display = "block"; return; }
-  hideCreate();
-  var rid = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-  db.ref("rooms/" + rid + "/info").set({ name: name, pw: pw, created: Date.now() });
-  curRoomPw = pw;
-  enterRoom(rid, name);
-}
-
-// ===== 방 입장 =====
-function askJoin(rid, rn) {
-  pendJoin = rid;
-  document.getElementById("joinLabel").textContent = "방: " + rn;
-  document.getElementById("joinPw").value = "";
-  document.getElementById("joinErr").style.display = "none";
-  document.getElementById("joinModal").classList.add("show");
-  document.getElementById("joinPw").focus();
-}
-function hideJoin() { document.getElementById("joinModal").classList.remove("show"); }
-function doJoin() {
-  var pw = document.getElementById("joinPw").value.trim();
-  var err = document.getElementById("joinErr");
-  if (pw.length !== 4) { err.textContent = "4자리 비밀번호를 입력하세요"; err.style.display = "block"; return; }
-  db.ref("rooms/" + pendJoin + "/info").once("value", function(snap) {
-    var info = snap.val();
-    if (!info) { err.textContent = "방이 존재하지 않습니다"; err.style.display = "block"; return; }
-    if (info.pw !== pw) { err.textContent = "비밀번호가 틀렸습니다"; err.style.display = "block"; return; }
-    hideJoin();
-    curRoomPw = pw;
-    enterRoom(pendJoin, info.name);
-  });
-}
-
-function enterRoom(rid, roomName) {
-  stopLobby();
-  curRoomId = rid;
-  curRoom = roomName;
-  roomRef = db.ref("rooms/" + rid + "/users");
-  roomRef.once("value", function(snap) {
-    var data = snap.val() || {};
-    var taken = Object.values(data).map(function(u) { return u.avatar; });
-    var pool = gender === "m" ? MALE : FEMALE;
-    var avail = pool.filter(function(a) { return taken.indexOf(a) < 0; });
-    myAvatar = avail.length > 0 ? avail[Math.floor(Math.random() * avail.length)] : pool[Math.floor(Math.random() * pool.length)];
-    document.getElementById("mapRoom").textContent = roomName;
-    document.getElementById("lobbyNick").textContent = myAvatar + " " + nickname;
-    roomRef.child(uid).onDisconnect().remove();
-    showPage("mapPage");
-    online = true;
-    updHideBtn();
-    initMap();
-    startGps();
-    listenRoom();
-    updTimer = setInterval(function() { if (myPos && online) pubMe(); }, 5000);
-  });
-}
-
-// ===== 3. 지도 =====
-function initMap() {
-  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
-  markers = {};
-  leafletMap = L.map("map", { zoomControl: false, attributionControl: true }).setView([37.0, 127.0], 14);
-  L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-    attribution: "© OpenStreetMap, © CARTO",
-    maxZoom: 19
-  }).addTo(leafletMap);
-  setTimeout(function() { leafletMap.invalidateSize(); }, 300);
-}
-
-function startGps() {
-  if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-  document.getElementById("gpsLoading").style.display = "block";
-  document.getElementById("recenterBtn").style.display = "none";
-
-  // 빠른 첫 위치
-  navigator.geolocation.getCurrentPosition(
-    function(pos) {
-      myPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-      document.getElementById("gpsLoading").style.display = "none";
-      document.getElementById("recenterBtn").style.display = "flex";
-      leafletMap.setView([myPos.lat, myPos.lon], 16);
-      updateMyMarker();
-      if (online) pubMe();
-    },
-    function() {},
-    { enableHighAccuracy: false, maximumAge: 60000, timeout: 5000 }
-  );
-
-  watchId = navigator.geolocation.watchPosition(
-    function(pos) {
-      myPos = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-      document.getElementById("gpsLoading").style.display = "none";
-      document.getElementById("recenterBtn").style.display = "flex";
-      updateMyMarker();
-      if (online) pubMe();
-    },
-    function(err) {
-      var msg = "";
-      if (err.code === 1) msg = "위치 권한이 거부되었습니다<br><span style='font-size:12px;color:#5a7a94'>브라우저 설정에서 위치 권한을 허용해주세요</span>";
-      else if (err.code === 2) msg = "GPS 신호를 찾을 수 없습니다<br><span style='font-size:12px;color:#5a7a94'>실외에서 다시 시도해주세요</span>";
-      else msg = "위치 확인 시간이 초과되었습니다";
-      document.getElementById("gpsLoading").innerHTML =
-        '<div style="font-size:36px;margin-bottom:12px">⚠️</div>'
-        + '<div style="font-size:15px;font-weight:600">' + msg + '</div>'
-        + '<button onclick="retryGps()" style="margin-top:16px;background:linear-gradient(135deg,#4FC3F7,#0288D1);border:none;border-radius:10px;padding:10px 28px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">다시 시도 🔄</button>';
-    },
-    { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 }
-  );
-}
-
-function retryGps() {
-  document.getElementById("gpsLoading").innerHTML =
-    '<div class="spin" style="font-size:36px;margin-bottom:12px">📡</div>'
-    + '<div style="font-size:15px;font-weight:600">GPS 재연결 중...</div>';
-  if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-  startGps();
-}
-
-function updateMyMarker() {
-  if (!leafletMap || !myPos) return;
-  var icon = L.divIcon({
-    html: '<div style="font-size:32px;filter:drop-shadow(0 2px 6px rgba(79,195,247,0.5));text-align:center">' + myAvatar + '</div><div style="width:8px;height:8px;background:#4FC3F7;border-radius:50%;margin:-2px auto 0;box-shadow:0 0 8px #4FC3F7"></div>',
-    iconSize: [40, 46], iconAnchor: [20, 46], className: ""
-  });
-  if (myMarker) { myMarker.setLatLng([myPos.lat, myPos.lon]).setIcon(icon); }
-  else { myMarker = L.marker([myPos.lat, myPos.lon], { icon: icon }).addTo(leafletMap); }
-}
-
-function pubMe() {
-  if (!roomRef || !myPos) return;
-  roomRef.child(uid).set({
-    nickname: nickname, avatar: myAvatar,
-    lat: myPos.lat, lon: myPos.lon, ts: Date.now()
-  });
-}
-
-function unpublish() {
-  if (roomRef) roomRef.child(uid).remove();
-}
-
-// ===== 다른 유저 =====
-function listenRoom() {
-  if (!roomRef) return;
-  roomRef.on("value", function(snap) {
-    var data = snap.val() || {};
-    // 10분 지난 유저 삭제
-    var now = Date.now();
-    Object.keys(data).forEach(function(k) {
-      if (data[k].ts && now - data[k].ts > 600000) {
-        db.ref("rooms/" + curRoomId + "/users/" + k).remove();
-        delete data[k];
-      }
+  }else{
+    db.ref("accounts/"+safeId).once("value",function(snap){
+      var acc=snap.val();if(!acc){err.textContent="존재하지 않는 아이디";err.style.display="block";return;}
+      if(acc.pw!==pw){err.textContent="비밀번호가 틀렸습니다";err.style.display="block";return;}
+      myId=safeId;isAdmin=(acc.role==="admin");isGuest=false;nick=acc.nickname||"";gender=acc.gender||"";myPhoto=acc.photo||"";
+      if(nick&&gender)goLobby();
+      else{if(nick)document.getElementById("nickInp").value=nick;if(gender)pickG(gender);if(myPhoto)document.getElementById("avPrev").innerHTML='<img src="'+myPhoto+'">';showPage("profilePage");}
     });
-    // 다른 유저 마커
-    var otherIds = {};
-    var others = [];
-    Object.keys(data).forEach(function(k) {
-      if (k === uid) return;
-      otherIds[k] = true;
-      var u = data[k];
-      others.push(u);
-      var icon = L.divIcon({
-        html: '<div style="font-size:28px;text-align:center">' + u.avatar + '</div>',
-        iconSize: [36, 36], iconAnchor: [18, 36], className: ""
-      });
-      if (markers[k]) {
-        markers[k].setLatLng([u.lat, u.lon]).setIcon(icon);
-      } else {
-        markers[k] = L.marker([u.lat, u.lon], { icon: icon }).addTo(leafletMap);
-      }
+  }
+}
+// 프로필
+function onPhoto(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(ev){var img=new Image();img.onload=function(){var c=document.createElement("canvas");c.width=60;c.height=60;var ctx=c.getContext("2d");var s=Math.min(img.width,img.height);ctx.drawImage(img,(img.width-s)/2,(img.height-s)/2,s,s,0,0,60,60);myPhoto=c.toDataURL("image/jpeg",0.6);document.getElementById("avPrev").innerHTML='<img src="'+myPhoto+'">';chkProfile();};img.src=ev.target.result;};r.readAsDataURL(f);}
+function pickG(g){gender=g;document.getElementById("gM").className="gender-btn"+(g==="m"?" sel":"");document.getElementById("gF").className="gender-btn"+(g==="f"?" sel":"");if(!myPhoto)document.getElementById("avPrev").textContent=g==="m"?"🙋‍♂️":"🙋‍♀️";chkProfile();}
+function chkProfile(){nick=document.getElementById("nickInp").value.trim();document.getElementById("profileBtn").style.opacity=(nick&&gender)?"1":"0.5";}
+function saveProfile(){nick=document.getElementById("nickInp").value.trim();if(!nick||!gender)return;if(db&&myId&&!isGuest)db.ref("accounts/"+myId).update({nickname:nick,gender:gender,photo:myPhoto||""});goLobby();}
+function goLobby(){
+  document.getElementById("lobbyNk").textContent=nick;var la=document.getElementById("lobbyAv");
+  if(myPhoto)la.innerHTML='<img src="'+myPhoto+'" style="width:100%;height:100%;object-fit:cover">';else la.textContent=gender==="m"?"🙋‍♂️":"🙋‍♀️";
+  document.getElementById("createBtnEl").style.display=isGuest?"none":"block";
+  document.getElementById("adminBtn").style.display=isAdmin?"flex":"none";
+  if(db){db.ref("settings/appLink").once("value",function(s){appLink=s.val()||"";});}
+  showPage("lobbyPage");startLobby();
+}
+// 로비
+function startLobby(){if(!db)return;if(lobbyLis)db.ref("rooms").off("value",lobbyLis);
+  lobbyLis=db.ref("rooms").on("value",function(snap){
+    var data=snap.val()||{},el=document.getElementById("roomList"),noEl=document.getElementById("noRooms"),rooms=[],now=Date.now();
+    Object.keys(data).forEach(function(k){var r=data[k],cnt=0;
+      if(r.users){Object.keys(r.users).forEach(function(uk){if(now-r.users[uk].ts<120000)cnt++;});}
+      var info=r.info||{},persist=info.persist||false,created=info.created||0;
+      if(cnt>0||persist||(now-created<300000))rooms.push({id:k,name:info.name||k,count:cnt,owner:info.owner||"",persist:persist});
+      else db.ref("rooms/"+k).remove();
     });
-    // 사라진 유저 정리
-    Object.keys(markers).forEach(function(k) {
-      if (!otherIds[k]) { leafletMap.removeLayer(markers[k]); delete markers[k]; }
-    });
-    renderCards(others);
+    if(rooms.length===0){el.innerHTML="";el.appendChild(noEl);noEl.style.display="block";}
+    else{noEl.style.display="none";el.innerHTML=rooms.map(function(r){var canDel=isAdmin||(r.owner===myId&&!isGuest);
+      return'<div class="ritem" onclick="askJoin(\''+r.id+'\',\''+r.name+'\')"><div class="rleft"><div class="ricon">🏠</div><div><div class="rname">'+r.name+'</div><div class="rcnt">👥 '+r.count+'명</div>'+(r.persist?'<div class="rpersist">📌 영구 방</div>':'')+'</div></div><div style="display:flex;align-items:center">'+(canDel?'<button class="rdel" onclick="event.stopPropagation();askDel(\''+r.id+'\',\''+r.name+'\')">🗑️</button>':'')+'<button class="rjoin" onclick="event.stopPropagation();askJoin(\''+r.id+'\',\''+r.name+'\')">입장</button></div></div>';}).join("");}
+  });
+}
+function stopLobby(){if(lobbyLis&&db){db.ref("rooms").off("value",lobbyLis);lobbyLis=null;}}
+function showCreate(){if(isGuest)return;document.getElementById("createModal").classList.add("show");document.getElementById("cNm").value="";document.getElementById("cPw").value="";document.getElementById("cErr").style.display="none";
+  document.getElementById("persistRow").style.display=isAdmin?"flex":"none";document.getElementById("persistCheck").checked=false;
+  document.getElementById("nameSuggest").innerHTML=ROOM_NAMES.slice().sort(function(){return 0.5-Math.random();}).slice(0,5).map(function(n){return'<span onclick="document.getElementById(\'cNm\').value=\''+n+'\'">'+n+'</span>';}).join("");document.getElementById("cNm").focus();}
+function hideCreate(){document.getElementById("createModal").classList.remove("show");}
+function doCreate(){var nm=document.getElementById("cNm").value.trim(),pw=document.getElementById("cPw").value.trim(),err=document.getElementById("cErr");if(!nm){err.textContent="방 이름을 입력하세요";err.style.display="block";return;}if(pw.length!==4){err.textContent="비밀번호 4자리를 입력하세요";err.style.display="block";return;}
+  var persist=isAdmin&&document.getElementById("persistCheck").checked;
+  hideCreate();var rid=Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  db.ref("rooms/"+rid+"/info").set({name:nm,pw:pw,owner:myId,persist:persist,created:Date.now()});curRoomPw=pw;enterRoom(rid,nm);}
+function askJoin(rid,rn){pendJoin=rid;document.getElementById("jLabel").textContent="방: "+rn;document.getElementById("jPw").value="";document.getElementById("jErr").style.display="none";document.getElementById("joinModal").classList.add("show");document.getElementById("jPw").focus();}
+function hideJoin(){document.getElementById("joinModal").classList.remove("show");}
+function doJoin(){var pw=document.getElementById("jPw").value.trim(),err=document.getElementById("jErr");if(pw.length!==4){err.textContent="4자리 비밀번호를 입력하세요";err.style.display="block";return;}db.ref("rooms/"+pendJoin+"/info").once("value",function(s){var i=s.val();if(!i){err.textContent="방이 존재하지 않습니다";err.style.display="block";return;}if(i.pw!==pw){err.textContent="비밀번호가 틀렸습니다";err.style.display="block";return;}hideJoin();curRoomPw=pw;enterRoom(pendJoin,i.name);});}
+function askDel(rid,rn){pendDel=rid;document.getElementById("delDesc").textContent='"'+rn+'" 방을 삭제할까요?';document.getElementById("delModal").classList.add("show");}
+function hideDelModal(){document.getElementById("delModal").classList.remove("show");}
+function confirmDel(){hideDelModal();if(db&&pendDel)db.ref("rooms/"+pendDel).remove();}
+
+function enterRoom(rid,rn){stopLobby();curRoomId=rid;curRoom=rn;roomRef=db.ref("rooms/"+rid+"/users");chatRef=db.ref("rooms/"+rid+"/chat");
+  joinedAt=Date.now(); // 입장 시간 기록
+  roomRef.once("value",function(snap){var data=snap.val()||{},taken=Object.values(data).map(function(u){return u.avatar;}),pool=gender==="m"?MALE:FEMALE,avail=pool.filter(function(a){return taken.indexOf(a)<0;});
+    myAvatar=avail.length>0?avail[Math.floor(Math.random()*avail.length)]:pool[Math.floor(Math.random()*pool.length)];
+    document.getElementById("mapRoom").textContent=rn;roomRef.child(uid).onDisconnect().remove();
+    showPage("mapPage");hiding=false;chatOpen=false;seenChat=0;prevMsgs=[];chatInited=false;updHideBtn();
+    document.getElementById("chatPanel").classList.remove("show");document.getElementById("chatBtn").classList.remove("chat-on");
+    initMap();startGps();listenRoom();listenChat();
+    updTimer=setInterval(function(){if(myPos)pubMe();},5000);
   });
 }
 
-function renderCards(users) {
-  var cardsEl = document.getElementById("userCards");
-  var emptyEl = document.getElementById("emptyMap");
-  var reBtn = document.getElementById("recenterBtn");
+function showShare(){document.getElementById("sNm").textContent=curRoom;document.getElementById("sPw").textContent=curRoomPw;document.getElementById("shareOk").style.display="none";
+  if(appLink){document.getElementById("sAppRow").style.display="flex";document.getElementById("sApp").textContent="있음";}else{document.getElementById("sAppRow").style.display="none";}
+  document.getElementById("shareModal").classList.add("show");}
+function hideShare(){document.getElementById("shareModal").classList.remove("show");}
+function copyShare(){var url="https://kjh964-creator.github.io/here-app/";
+  var t="📍 HERE - 실시간 위치 공유\n\n🏠 방 이름: "+curRoom+"\n🔑 비밀번호: "+curRoomPw+"\n";
+  if(appLink)t+="\n📱 앱 다운로드:\n"+appLink+"\n";
+  t+="\n🌐 웹 접속:\n"+url+"\n\n✅ 접속 → 로그인 → 방 입장 → 비밀번호 입력\n✅ 같은 방의 사람들과 실시간 위치가 공유됩니다\n✅ 나가면 내 위치는 자동으로 삭제돼요";
+  if(navigator.share)navigator.share({title:"HERE",text:t}).catch(function(){});else navigator.clipboard.writeText(t).then(function(){document.getElementById("shareOk").textContent="✅ 복사되었습니다!";document.getElementById("shareOk").style.display="block";}).catch(function(){});}
 
-  if (users.length > 0) {
-    cardsEl.style.display = "block";
-    emptyEl.style.display = "none";
-    reBtn.style.bottom = (users.length <= 4) ? "120px" : "180px";
-    var big = users.length <= 4;
-    var html = '<div class="cards-row">';
-    var max = Math.min(users.length, 8);
-    for (var i = 0; i < max; i++) {
-      var u = users[i];
-      var dist = myPos ? calcDist(myPos.lat, myPos.lon, u.lat, u.lon) : "";
-      html += '<div class="u-card' + (big ? ' big' : '') + '" onclick="flyTo(' + u.lat + ',' + u.lon + ')">'
-        + '<div class="avatar">' + u.avatar + '</div>'
-        + '<div class="uname">' + u.nickname + '</div>'
-        + (dist ? '<div class="udist">📍 ' + dist + '</div>' : '')
-        + '<div class="utime">' + timeAgo(u.ts) + '</div></div>';
-    }
-    html += '</div>';
-    cardsEl.innerHTML = html;
-  } else {
-    cardsEl.style.display = "none";
-    reBtn.style.bottom = "80px";
-    emptyEl.style.display = myPos ? "block" : "none";
-  }
+// 관리자 설정
+function showAdmin(){if(!isAdmin)return;document.getElementById("appLinkInp").value=appLink;document.getElementById("adminOk").style.display="none";document.getElementById("adminModal").classList.add("show");}
+function hideAdmin(){document.getElementById("adminModal").classList.remove("show");}
+function saveAdmin(){var link=document.getElementById("appLinkInp").value.trim();appLink=link;if(db)db.ref("settings/appLink").set(link);document.getElementById("adminOk").textContent="✅ 저장되었습니다!";document.getElementById("adminOk").style.display="block";setTimeout(hideAdmin,1000);}
+
+// 지도
+function initMap(){if(gmap)gmap=null;var me=document.getElementById("map");function go(){if(!gReady){setTimeout(go,200);return;}gmap=new google.maps.Map(me,{center:{lat:37.15,lng:127.08},zoom:16,disableDefaultUI:true,zoomControl:false,styles:[{featureType:"poi",stylers:[{visibility:"off"}]}]});geocoder=new google.maps.Geocoder();myMk=null;oMks={};}go();}
+function startGps(){if(!navigator.geolocation){gpsErr("GPS를 지원하지 않는 기기입니다");return;}navigator.geolocation.getCurrentPosition(onGps,function(){},{enableHighAccuracy:false,maximumAge:60000,timeout:8000});watchId=navigator.geolocation.watchPosition(onGps,function(e){if(myPos)return;if(e.code===1)gpsErr("위치 권한이 거부되었습니다\n\n브라우저 설정에서 위치를 허용해주세요");else if(e.code===2)gpsErr("GPS 신호를 찾을 수 없습니다");else gpsErr("위치 확인 시간 초과");},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});}
+function onGps(p){myPos={lat:p.coords.latitude,lon:p.coords.longitude};document.getElementById("gpsOv").style.display="none";document.getElementById("floatBtns").style.display="flex";updMyMk();pubMe();}
+function gpsErr(msg){document.getElementById("gpsOv").innerHTML='<div style="font-size:36px;margin-bottom:12px">⚠️</div><div style="font-size:14px;font-weight:600;white-space:pre-line;line-height:1.6">'+msg+'</div><button class="retry" onclick="retryGps()">다시 시도 🔄</button>';}
+function retryGps(){document.getElementById("gpsOv").innerHTML='<div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div><div style="font-size:15px;font-weight:600">GPS 재연결 중...</div>';if(watchId!==null)navigator.geolocation.clearWatch(watchId);myPos=null;startGps();}
+function makeIcon(photo,emoji,isMe){var sz=isMe?44:38,bw=isMe?3:2;var c=document.createElement("canvas");c.width=sz;c.height=sz;var ctx=c.getContext("2d");ctx.beginPath();ctx.arc(sz/2,sz/2,sz/2,0,Math.PI*2);ctx.fillStyle="#fff";ctx.fill();ctx.beginPath();ctx.arc(sz/2,sz/2,sz/2-bw,0,Math.PI*2);ctx.fillStyle="#e8e8e8";ctx.fill();if(photo){return new Promise(function(res){var img=new Image();img.crossOrigin="anonymous";img.onload=function(){ctx.save();ctx.beginPath();ctx.arc(sz/2,sz/2,sz/2-bw,0,Math.PI*2);ctx.clip();ctx.drawImage(img,bw,bw,sz-bw*2,sz-bw*2);ctx.restore();if(isMe){ctx.beginPath();ctx.arc(sz/2,sz/2,sz/2,0,Math.PI*2);ctx.strokeStyle="rgba(25,118,210,0.5)";ctx.lineWidth=2;ctx.stroke();}res({url:c.toDataURL(),size:sz});};img.onerror=function(){res({url:c.toDataURL(),size:sz});};img.src=photo;});}else{ctx.font=(sz*0.45)+"px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(emoji,sz/2,sz/2+1);if(isMe){ctx.beginPath();ctx.arc(sz/2,sz/2,sz/2,0,Math.PI*2);ctx.strokeStyle="rgba(25,118,210,0.5)";ctx.lineWidth=2;ctx.stroke();}return Promise.resolve({url:c.toDataURL(),size:sz});}}
+function updMyMk(){if(!gmap||!myPos||hiding)return;makeIcon(myPhoto,myAvatar,true).then(function(icon){if(!myMk){myMk=new google.maps.Marker({position:{lat:myPos.lat,lng:myPos.lon},map:gmap,icon:{url:icon.url,scaledSize:new google.maps.Size(icon.size,icon.size),anchor:new google.maps.Point(icon.size/2,icon.size/2)},zIndex:1000});gmap.setCenter({lat:myPos.lat,lng:myPos.lon});}else myMk.setPosition({lat:myPos.lat,lng:myPos.lon});});}
+function pubMe(){if(!roomRef||!myPos)return;roomRef.child(uid).set({id:uid,acctId:myId,avatar:myAvatar,nickname:nick,gender:gender,photo:myPhoto||"",lat:hiding?0:myPos.lat,lon:hiding?0:myPos.lon,hidden:hiding,ts:Date.now()});}
+function listenRoom(){if(roomLis&&roomRef)roomRef.off("value",roomLis);roomLis=roomRef.on("value",function(snap){var d=snap.val()||{},now=Date.now();users={};Object.keys(d).forEach(function(k){if(now-d[k].ts<600000)users[k]=d[k];});renderFriends();renderMks();});}
+function hav(a,b,c,d){var R=6371000,r=function(x){return x*Math.PI/180;},dLat=r(c-a),dLon=r(d-b),s=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(r(a))*Math.cos(r(c))*Math.sin(dLon/2)*Math.sin(dLon/2);return R*2*Math.atan2(Math.sqrt(s),Math.sqrt(1-s));}
+function fD(m){return m<1000?Math.round(m)+"m":(m/1000).toFixed(1)+"km";}
+function renderFriends(){
+  var bar=document.getElementById("friendBar"),list=document.getElementById("friendList"),arr=Object.values(users);
+  if(arr.length===0){bar.style.display="none";return;}bar.style.display="block";
+  list.innerHTML=arr.slice(0,8).map(function(u){var isMe=u.id===uid,isH=u.hidden,photo=u.photo||"",emoji=u.avatar||"👤",avInner=photo?'<img src="'+photo+'">':emoji;
+    return '<div class="fi'+(isH?" hid":"")+'" id="fi_'+u.id+'" onclick="'+(isMe?"":"showFriend('"+u.id+"')")+'"><div class="fi-av'+(isMe?" me":"")+'">'+avInner+'</div>'+(isH?'':'<div class="fi-online"></div>')+'<div class="fi-nm">'+(isMe?"나":u.nickname)+'</div></div>';
+  }).join("");
+}
+function showFriend(fid){var u=users[fid];if(!u||u.hidden||u.lat===0)return;closeFP();var avEl=document.getElementById("fpAv");if(u.photo)avEl.innerHTML='<img src="'+u.photo+'">';else avEl.textContent=u.avatar;document.getElementById("fpName").textContent=u.nickname;document.getElementById("fpAddr").textContent="📌 주소 검색 중...";var dist=myPos?fD(hav(myPos.lat,myPos.lon,u.lat,u.lon)):"";document.getElementById("fpDist").textContent=dist?"📍 "+dist+" 거리":"";document.getElementById("friendPopup").style.display="block";gmap.panTo({lat:u.lat,lng:u.lon});gmap.setZoom(17);
+  if(geocoder){geocoder.geocode({location:{lat:u.lat,lng:u.lon}},function(res,st){
+    if(st==="OK"&&res[0]){document.getElementById("fpAddr").textContent="📌 "+res[0].formatted_address;}
+    else{fetch("https://maps.googleapis.com/maps/api/geocode/json?latlng="+u.lat+","+u.lon+"&key=AIzaSyDigW9GGdbEU7M1-YHHpvpdsmdQ--ywhUU&language=ko").then(function(r){return r.json();}).then(function(d){document.getElementById("fpAddr").textContent=(d.status==="OK"&&d.results[0])?"📌 "+d.results[0].formatted_address:"주소를 찾을 수 없습니다";}).catch(function(){document.getElementById("fpAddr").textContent="주소를 찾을 수 없습니다";});}
+  });}}
+function closeFP(){document.getElementById("friendPopup").style.display="none";}
+function renderMks(){if(!gmap)return;var arr=Object.values(users).filter(function(u){return u.id!==uid&&!u.hidden&&u.lat!==0;});var ids={};arr.forEach(function(u){ids[u.id]=true;});Object.keys(oMks).forEach(function(id){if(!ids[id]){oMks[id].setMap(null);delete oMks[id];}});arr.forEach(function(u){makeIcon(u.photo,u.avatar,false).then(function(icon){var pos={lat:u.lat,lng:u.lon};if(oMks[u.id])oMks[u.id].setPosition(pos);else{var mk=new google.maps.Marker({position:pos,map:gmap,icon:{url:icon.url,scaledSize:new google.maps.Size(icon.size,icon.size),anchor:new google.maps.Point(icon.size/2,icon.size/2)}});mk.addListener("click",function(){showFriend(u.id);});oMks[u.id]=mk;}});});}
+
+// 채팅 - joinedAt 이후 메시지만 표시
+function toggleChat(){chatOpen=!chatOpen;var panel=document.getElementById("chatPanel"),btn=document.getElementById("chatBtn"),fb=document.getElementById("floatBtns");
+  if(chatOpen){panel.classList.add("show");btn.classList.add("chat-on");seenChat=lastChatCount;updBadge();scrollChat();fb.style.bottom="calc(50vh + 4px)";}
+  else{panel.classList.remove("show");btn.classList.remove("chat-on");fb.style.bottom="80px";document.getElementById("chatInp").blur();}}
+function listenChat(){if(!chatRef)return;if(chatLis)chatRef.off("value",chatLis);
+  chatLis=chatRef.orderByChild("ts").startAt(joinedAt).on("value",function(snap){
+    var msgs=[];snap.forEach(function(c){msgs.push(c.val());});lastChatCount=msgs.length;
+    if(chatInited&&msgs.length>prevMsgs.length){for(var i=prevMsgs.length;i<msgs.length;i++){var m=msgs[i];if(m.uid!==uid)playNoti();}}
+    chatInited=true;prevMsgs=msgs;var el=document.getElementById("chatMsgs");
+    if(msgs.length===0){el.innerHTML='<div class="chat-empty">아직 메시지가 없어요</div>';return;}
+    el.innerHTML=msgs.map(function(m){var isMe=m.uid===uid;var avInner=m.photo?'<img src="'+m.photo+'">':m.avatar||"👤";var t=new Date(m.ts);var ts=t.getHours()+":"+(t.getMinutes()<10?"0":"")+t.getMinutes();return '<div class="chat-msg'+(isMe?" mine":"")+'"><div class="cm-av">'+avInner+'</div><div class="cm-body"><div class="cm-name">'+(isMe?"나":m.nickname)+'</div><div class="cm-text">'+escHtml(m.text)+'</div><div class="cm-time">'+ts+'</div></div></div>';}).join("");
+    if(chatOpen)seenChat=lastChatCount;updBadge();scrollChat();
+  });
+}
+function sendMsg(){var inp=document.getElementById("chatInp"),txt=inp.value.trim();if(!txt||!chatRef)return;chatRef.push({uid:uid,nickname:nick,avatar:myAvatar,photo:myPhoto||"",text:txt,ts:Date.now()});inp.value="";}
+function scrollChat(){var el=document.getElementById("chatMsgs");setTimeout(function(){el.scrollTop=el.scrollHeight;},100);}
+function updBadge(){var badge=document.getElementById("chatBadge"),un=lastChatCount-seenChat;if(un>0&&!chatOpen){badge.style.display="flex";badge.textContent=un>9?"9+":un;}else badge.style.display="none";}
+function escHtml(t){var d=document.createElement("div");d.textContent=t;return d.innerHTML;}
+var audioCtx=null;
+document.addEventListener("click",function(){if(!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();audioCtx.resume();}catch(e){}}},{ once:false });
+document.addEventListener("touchstart",function(){if(!audioCtx){try{audioCtx=new(window.AudioContext||window.webkitAudioContext)();audioCtx.resume();}catch(e){}}},{once:false});
+function playNoti(){
+  try{
+    if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();}
+    audioCtx.resume().then(function(){
+      var o=audioCtx.createOscillator();var g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);
+      o.type="sine";o.frequency.setValueAtTime(880,audioCtx.currentTime);o.frequency.setValueAtTime(1200,audioCtx.currentTime+0.08);o.frequency.setValueAtTime(880,audioCtx.currentTime+0.16);
+      g.gain.setValueAtTime(0.4,audioCtx.currentTime);g.gain.exponentialRampToValueAtTime(0.01,audioCtx.currentTime+0.4);
+      o.start(audioCtx.currentTime);o.stop(audioCtx.currentTime+0.4);
+    });
+    if(navigator.vibrate)navigator.vibrate(200);
+  }catch(e){}
 }
 
-function flyTo(lat, lon) { if (leafletMap) leafletMap.setView([lat, lon], 17); }
+// 키보드 대응
+if(window.visualViewport){window.visualViewport.addEventListener("resize",function(){if(chatOpen){document.getElementById("chatPanel").style.maxHeight=window.visualViewport.height*0.5+"px";document.getElementById("floatBtns").style.bottom=window.visualViewport.height*0.5+4+"px";}});}
 
-function calcDist(lat1, lon1, lat2, lon2) {
-  var R = 6371000;
-  var dLat = (lat2 - lat1) * Math.PI / 180;
-  var dLon = (lon2 - lon1) * Math.PI / 180;
-  var a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  var d = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  if (d < 1000) return Math.round(d) + "m";
-  return (d / 1000).toFixed(1) + "km";
-}
-
-function timeAgo(ts) {
-  var s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 10) return "방금";
-  if (s < 60) return s + "초 전";
-  if (s < 3600) return Math.floor(s / 60) + "분 전";
-  return Math.floor(s / 3600) + "시간 전";
-}
-
-// ===== 컨트롤 =====
-function toggleOnline() {
-  if (online) {
-    online = false;
-    unpublish();
-  } else {
-    online = true;
-    if (myPos) pubMe();
-  }
-  updHideBtn();
-}
-
-function updHideBtn() {
-  var btn = document.getElementById("toggleBtn");
-  var st = document.getElementById("topStatus");
-  if (online) {
-    btn.style.background = "rgba(255,107,107,0.15)";
-    btn.style.color = "#ff6b6b";
-    btn.style.borderColor = "rgba(255,107,107,0.3)";
-    btn.textContent = "숨기기";
-    st.style.color = "#4FC3F7";
-    st.textContent = "📡 접속 중";
-  } else {
-    btn.style.background = "rgba(79,195,247,0.15)";
-    btn.style.color = "#4FC3F7";
-    btn.style.borderColor = "rgba(79,195,247,0.3)";
-    btn.textContent = "접속";
-    st.style.color = "#ff7043";
-    st.textContent = "⏸ 숨김";
-  }
-}
-
-function recenter() { if (leafletMap && myPos) leafletMap.setView([myPos.lat, myPos.lon], 16); }
-
-// ===== 나가기 =====
-function confirmExit() { document.getElementById("exitModal").classList.add("show"); }
-function hideExit() { document.getElementById("exitModal").classList.remove("show"); }
-function doExit() {
-  hideExit();
-  unpublish();
-  if (watchId !== null) { navigator.geolocation.clearWatch(watchId); watchId = null; }
-  if (updTimer) { clearInterval(updTimer); updTimer = null; }
-  if (roomRef) { roomRef.off(); roomRef = null; }
-  if (leafletMap) { leafletMap.remove(); leafletMap = null; }
-  myMarker = null;
-  markers = {};
-  myPos = null;
-  curRoomId = "";
-  curRoom = "";
-  curRoomPw = "";
-  showPage("lobbyPage");
-  loadRooms();
-}
-
-// ===== 공유 =====
-function showShare() {
-  document.getElementById("sName").textContent = curRoom;
-  document.getElementById("sPw").textContent = curRoomPw;
-  document.getElementById("shareOk").style.display = "none";
-  document.getElementById("shareModal").classList.add("show");
-}
-function hideShare() { document.getElementById("shareModal").classList.remove("show"); }
-function copyShare() {
-  var url = "https://kjh964-creator.github.io/here-app/";
-  var t = "📍 HERE - 실시간 위치 공유\n\n🏠 방 이름: " + curRoom + "\n🔑 비밀번호: " + curRoomPw
-    + "\n\n접속 링크:\n" + url
-    + "\n\n✅ 링크 접속 → 닉네임 입력 → 방 입장 → 비밀번호 입력"
-    + "\n✅ 같은 방의 사람들과 실시간 위치가 공유됩니다"
-    + "\n✅ 나가면 내 위치는 자동으로 삭제돼요";
-  if (navigator.share) {
-    navigator.share({ title: "HERE - 위치 공유", text: t }).catch(function() {});
-  } else {
-    navigator.clipboard.writeText(t).then(function() {
-      var el = document.getElementById("shareOk");
-      el.textContent = "✅ 복사되었습니다!";
-      el.style.display = "block";
-    }).catch(function() {});
-  }
-}
-
-// ===== 정리 =====
-window.addEventListener("beforeunload", function() { unpublish(); });
-window.addEventListener("pagehide", function() { unpublish(); });
-
-// ===== PWA =====
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch(function() {});
-}
+function toggleHide(){hiding=!hiding;updHideBtn();if(hiding){if(myMk){myMk.setMap(null);myMk=null;}}else updMyMk();pubMe();}
+function updHideBtn(){var b=document.getElementById("hideBtn");b.className=hiding?"mt-btn hide-on":"mt-btn";b.innerHTML=hiding?"👁️ 보이기":"👁️ 숨기기";}
+function viewAll(){var arr=Object.values(users).filter(function(u){return !u.hidden&&u.lat!==0;});if(arr.length===0)return;var bounds=new google.maps.LatLngBounds();arr.forEach(function(u){bounds.extend({lat:u.lat,lng:u.lon});});if(myPos&&!hiding)bounds.extend({lat:myPos.lat,lng:myPos.lon});gmap.fitBounds(bounds,{top:110,bottom:80,left:40,right:60});}
+function showExit(){document.getElementById("exitModal").classList.add("show");}
+function hideExit(){document.getElementById("exitModal").classList.remove("show");}
+function leaveRoom(){hideExit();if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}if(updTimer){clearInterval(updTimer);updTimer=null;}if(roomRef){roomRef.child(uid).remove();if(roomLis)roomRef.off("value",roomLis);roomLis=null;}if(chatRef&&chatLis){chatRef.off("value",chatLis);chatLis=null;}chatRef=null;gmap=null;myMk=null;oMks={};myPos=null;users={};hiding=false;roomRef=null;chatOpen=false;prevMsgs=[];chatInited=false;joinedAt=0;
+  document.getElementById("gpsOv").style.display="block";document.getElementById("gpsOv").innerHTML='<div style="font-size:36px;margin-bottom:12px;animation:spin 2s linear infinite">📡</div><div style="font-size:15px;font-weight:600">GPS 연결 중...</div><div style="font-size:12px;color:#999;margin-top:6px">잠시만 기다려주세요</div>';
+  document.getElementById("friendBar").style.display="none";document.getElementById("floatBtns").style.display="none";document.getElementById("chatPanel").classList.remove("show");document.getElementById("friendPopup").style.display="none";
+  showPage("lobbyPage");startLobby();}
+function recenter(){if(gmap&&myPos)gmap.panTo({lat:myPos.lat,lng:myPos.lon});}
+window.addEventListener("beforeunload",function(){if(roomRef)roomRef.child(uid).remove();});
+window.addEventListener("pagehide",function(){if(roomRef)roomRef.child(uid).remove();});
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
 </script>
 </body>
 </html>
